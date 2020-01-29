@@ -3,24 +3,16 @@ using Servirtium.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Xunit;
 
 namespace Servirtium.Demo
 {
+    [Xunit.Collection("Servirtium Demo")]
     public class ClimateApiPassThroughTests : ClimateApiTests, IDisposable
     {
-        IServirtiumServer _server = AspNetCoreServirtiumServer.Default(new PassThroughInteractionMonitor(new Uri(ClimateApi.DEFAULT_SITE)));
 
-        public ClimateApiPassThroughTests()
-        {
-            _server.Start();
-        }
+        internal override ClimateApi ClimateApi => new ClimateApi(new Uri("http://localhost:5000"));
 
-        internal override ClimateApi ClimateApi => new ClimateApi("http://localhost:5000");
+        internal override Func<string, IServirtiumServer> MonitorFactory => (script)=>AspNetCoreServirtiumServer.Default(new PassThroughInteractionMonitor(ClimateApi.DEFAULT_SITE), ClimateApi.DEFAULT_SITE);
 
-        public void Dispose()
-        {
-            _server.Stop();
-        }
     }
 }

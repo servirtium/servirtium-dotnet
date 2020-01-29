@@ -21,9 +21,9 @@ namespace Servirtium.Core
         }
 
 
-        public async Task<ServiceResponse> GetServiceResponseForRequest(string method, Uri incomingUrl, IInteraction interaction, bool lowerCaseHeaders)
+        public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
         {
-            var request = new HttpRequestMessage(new HttpMethod(method), new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{incomingUrl.PathAndQuery}"));
+            var request = new HttpRequestMessage(interaction.Method, new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"));
             var response = await _httpClient.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
             return new ServiceResponse(

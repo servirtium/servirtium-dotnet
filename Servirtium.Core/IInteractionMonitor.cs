@@ -10,13 +10,7 @@ namespace Servirtium.Core
     {
         void FinishedScript(int interactionNum, bool failed) { }
 
-    /**
-     * Set the filename for the source of the conversation
-     * @param filename the filename
-     */
-        void SetScriptFilename(String filename) { }
-
-        Task<ServiceResponse> GetServiceResponseForRequest(string method, Uri url,
+        Task<ServiceResponse> GetServiceResponseForRequest(Uri host,
                                                      IInteraction interaction,
                                                      bool lowerCaseHeaders);
 

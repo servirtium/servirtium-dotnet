@@ -5,21 +5,21 @@ using System.Threading;
 
 namespace Servirtium.Core
 {
-    class InteractionCounter
+    public class InteractionCounter
     {
         private long _currentInteraction = -1;
 
-        long bump()
+        public int Bump()
         {
-            return Interlocked.Increment(ref _currentInteraction);
+            return (int)Interlocked.Increment(ref _currentInteraction);
         }
 
-        long get()
+        public int Get()
         {
             return (int)Interlocked.Read(ref _currentInteraction);
         }
 
-        void reset()
+        public void Reset()
         {
             Interlocked.Exchange(ref _currentInteraction, -1);
         }

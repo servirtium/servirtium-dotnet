@@ -15,4 +15,14 @@ namespace Servirtium.Core
 
         void FinishedScript();
     }
+
+    public class StubServirtiumServer : IServirtiumServer
+    {
+        public void FinishedScript()
+        { }
+
+        public Task<IServirtiumServer> Start() => Task.FromResult<IServirtiumServer>(this);
+
+        public Task Stop() => Task.CompletedTask;
+    }
 }
