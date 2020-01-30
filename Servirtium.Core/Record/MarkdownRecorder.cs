@@ -13,7 +13,6 @@ namespace Servirtium.Core.Record
         private readonly Uri _redirectHost;
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly string _targetFile;
-        private int _currentInteraction = -1;
 
         public MarkdownRecorder(Uri redirectHost, string targetFile) : this(redirectHost, targetFile, new ServiceInteropViaSystemNetHttp(), new MarkdownScriptWriter()) { }
 
@@ -45,13 +44,7 @@ namespace Servirtium.Core.Record
             }
             var interactionToRecord = builder.Build();
             _allInteractions[interactionToRecord.Number] = interactionToRecord;
-            _currentInteraction = interactionToRecord.Number;
             return response;
-        }
-
-        public IInteraction NewInteraction(int interactionNum, string context, string method, string path, string url)
-        {
-            throw new NotImplementedException();
         }
 
         public void FinishedScript(int interactionNum, bool failed)

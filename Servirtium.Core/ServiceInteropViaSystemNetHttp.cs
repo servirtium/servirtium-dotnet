@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Servirtium.Core
 {
-    class ServiceInteropViaSystemNetHttp : IServiceInteroperation
+    public class ServiceInteropViaSystemNetHttp : IServiceInteroperation
     {
         private readonly HttpClient _httpClient;
 

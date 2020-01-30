@@ -19,6 +19,7 @@ namespace Servirtium.Core
         public MediaTypeHeaderValue? RequestContentType { get; }
 
         public IEnumerable<(string, string)> RequestHeaders { get; }
+        public bool HasRequestBody => RequestBody != null && RequestContentType != null;
 
         public string? RequestBody { get; }
 
@@ -29,6 +30,9 @@ namespace Servirtium.Core
         public IEnumerable<(string, string)> ResponseHeaders { get; }
 
         public string? ResponseBody { get; }
+
+        public bool HasResponseBody=> ResponseBody != null && ResponseContentType != null;
+
     }
 
     class NoopInteraction : IInteraction

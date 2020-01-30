@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
+using static Servirtium.Core.SimpleInteractionTransforms;
 
 namespace Servirtium.Core.Tests
 {
@@ -19,7 +20,7 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void TransformClientRequestForRealService_NoRequestHeadersToRemoveAndNoHostRequestHeader_ReturnsUnchangedClone()
         {
-            var transformed =new SimpleInteractionTransforms(new Uri("http://mock.com"), new Regex[0], new Regex[0])
+            var transformed =new SimpleInteractionTransforms(new Uri("http://mock.com"))
                 .TransformClientRequestForRealService(_baseInteraction);
             Assert.Equal(_baseInteraction.Number, transformed.Number);
             Assert.Equal(_baseInteraction.Path, transformed.Path);

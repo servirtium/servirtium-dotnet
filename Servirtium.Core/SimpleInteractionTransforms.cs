@@ -8,8 +8,14 @@ namespace Servirtium.Core
 {
     public class SimpleInteractionTransforms : IInteractionTransforms
     {
+
+
         private readonly string _realServiceHost;
         private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeadersExcludePatterns;
+
+
+        public SimpleInteractionTransforms(Uri realServiceHost) : this(realServiceHost, new Regex[0], new Regex[0])
+        { }
 
         public SimpleInteractionTransforms(Uri realServiceHost, IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns)
         {

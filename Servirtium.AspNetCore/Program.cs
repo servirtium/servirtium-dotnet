@@ -15,7 +15,7 @@ namespace Servirtium.AspNetCore
     {
         public static void Main(string[] args)
         {
-            AspNetCoreServirtiumServer.WithCommandLineArgs(args, new PassThroughInteractionMonitor(new Uri("http://climatedataapi.worldbank.org")), new SimpleInteractionTransforms(new Uri("http://climatedataapi.worldbank.org"), new Regex[0], new Regex[0])).Start().Wait();
+            AspNetCoreServirtiumServer.WithCommandLineArgs(args, new PassThroughInteractionMonitor(new Uri("http://climatedataapi.worldbank.org")), new SimpleInteractionTransforms(new Uri("http://climatedataapi.worldbank.org"))).Start().Wait();
             Console.ReadKey();
         }
 

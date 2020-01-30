@@ -25,7 +25,7 @@ namespace Servirtium.AspNetCore
         public static AspNetCoreServirtiumServer WithTransforms(IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, interactionTransforms);
         public static AspNetCoreServirtiumServer Default(IInteractionMonitor monitor, Uri serviceHost) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost, new Regex[0], new Regex[0]));
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost));
         public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), monitor, interactionTransforms);
 
