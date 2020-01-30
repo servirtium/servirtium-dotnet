@@ -50,6 +50,8 @@ namespace Servirtium.Core
 
         private static IEnumerable<(string, string)> HeaderTextToHeaderList(string headerText)
            => headerText.Split('\n')
+                //remove empty lines first
+                .Where(line => !String.IsNullOrWhiteSpace(line))
                 .Select(line => {
                     var bits = line.Split(":");
                     if (bits.Length < 2)

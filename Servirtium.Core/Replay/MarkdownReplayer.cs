@@ -75,7 +75,6 @@ namespace Servirtium.Core.Replay
                     .Markdown($"{SERVIRTIUM_INTERACTION}{interactionText}")
                     .Build())
                 .ToDictionary(interaction=>interaction.Number, interaction=>interaction);
-            var interactionList = new List<IInteraction>();
         }
     }
 }

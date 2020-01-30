@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,18 +19,20 @@ namespace Servirtium.AspNetCore
 
         private readonly InteractionCounter _interactionCounter = new InteractionCounter();
 
+        private readonly IInteractionMonitor _interactionMonitor;
+
         
         public static AspNetCoreServirtiumServer WithTransforms(IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, interactionTransforms);
         public static AspNetCoreServirtiumServer Default(IInteractionMonitor monitor, Uri serviceHost) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost, new string[0], new string[0]));
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost, new Regex[0], new Regex[0]));
         public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), monitor, interactionTransforms);
 
         //private static readonly 
         public AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms)
         {
-            HashSet<string> headersNotToTransfer = new HashSet<string> {};
+            _interactionMonitor = monitor;
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.Configure(app =>
@@ -42,31 +45,19 @@ namespace Servirtium.AspNetCore
                             .Method(new System.Net.Http.HttpMethod(ctx.Request.Method))
                             .Path($"{ctx.Request.Path}{ctx.Request.QueryString}")
                             //Remap headers from a dictionary of string lists to a list of (string, string) tuples
-                            .RequestHeaders(ctx.Request.Headers.SelectMany(
-                                kvp =>
-                                    kvp.Value.Select(val => (kvp.Key, val))))
+                            .RequestHeaders
+                            (
+                                ctx.Request.Headers
+                                    .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
+                                    .ToArray()
+                            )
                             .Build();
                         var serviceRequestInteraction = interactionTransforms.TransformClientRequestForRealService(requestInteraction);
                         var responseFromService = await monitor.GetServiceResponseForRequest(
                             targetHost,
                             serviceRequestInteraction,
                             false);
-                        /* Transferring headers breaks response for now, can fix later as this is just proving the pipeline.
-                         * ctx.Response.OnStarting(() => {7
-                            foreach (var headerNameAndValue in responseFromService.Headers.Where(h=>!headersNotToTransfer.Contains(h.Item1.ToLower())))
-                            {
-                                (string name, string value) = headerNameAndValue;
-                                if (ctx.Response.Headers.TryGetValue(name, out var existing))
-                                {
-                                    ctx.Response.Headers[name] = new StringValues(existing.Append(value).ToArray());
-                                }
-                                else
-                                {
-                                    ctx.Response.Headers.Add(name, value);
-                                }
-                            }
-                            return Task.CompletedTask;
-                        });*/
+
 
                         ctx.Response.OnCompleted(() =>
                         {
@@ -91,7 +82,7 @@ namespace Servirtium.AspNetCore
 
         public void FinishedScript()
         {
-            throw new NotImplementedException();
+            _interactionMonitor.FinishedScript(_interactionCounter.Get(), false);
         }
 
         public async Task<IServirtiumServer> Start()
@@ -102,6 +93,7 @@ namespace Servirtium.AspNetCore
 
         public async Task Stop()
         {
+            FinishedScript();
             await _host.StopAsync();
         }
     }

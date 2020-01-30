@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +15,7 @@ namespace Servirtium.AspNetCore
     {
         public static void Main(string[] args)
         {
-            AspNetCoreServirtiumServer.WithCommandLineArgs(args, new PassThroughInteractionMonitor(new Uri("http://climatedataapi.worldbank.org")), new SimpleInteractionTransforms(new Uri("http://climatedataapi.worldbank.org"), new string[0], new string[0])).Start().Wait();
+            AspNetCoreServirtiumServer.WithCommandLineArgs(args, new PassThroughInteractionMonitor(new Uri("http://climatedataapi.worldbank.org")), new SimpleInteractionTransforms(new Uri("http://climatedataapi.worldbank.org"), new Regex[0], new Regex[0])).Start().Wait();
             Console.ReadKey();
         }
 

@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Servirtium.Core
 {
     public class SimpleInteractionTransforms : IInteractionTransforms
     {
         private readonly string _realServiceHost;
-        private readonly HashSet<string> _requestHeadersToRemove, _responseHeadersToRemove;
+        private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeadersExcludePatterns;
 
-        public SimpleInteractionTransforms(Uri realServiceHost, IEnumerable<string> requestHeadersToRemove, IEnumerable<string> responseHeadersToRemove)
+        public SimpleInteractionTransforms(Uri realServiceHost, IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns)
         {
             _realServiceHost = realServiceHost.Host;
-            _requestHeadersToRemove = new HashSet<string>(requestHeadersToRemove.Select(h=>h.ToLower()));
-            _responseHeadersToRemove = new HashSet<string>(responseHeadersToRemove.Select(h => h.ToLower()));
+            _requestHeaderExcludePatterns = requestHeaderExcludePatterns;
+            _responseHeadersExcludePatterns = responseHeadersExcludePatterns;
         }
 
         public IInteraction TransformClientRequestForRealService(IInteraction clientRequest)
@@ -23,7 +24,7 @@ namespace Servirtium.Core
                 .From(clientRequest)
                 .RequestHeaders(clientRequest.RequestHeaders
                     //Remove unwanted headers from client request
-                    .Where(h => !_requestHeadersToRemove.Contains(h.Item1.ToLower()))
+                    .Where(h => !_requestHeaderExcludePatterns.Any(pattern=>pattern.IsMatch($"{h.Item1}: {h.Item2}")))
                     //Fix host header
                     .Select(h =>
                     {

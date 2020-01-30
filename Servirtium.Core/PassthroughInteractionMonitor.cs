@@ -9,32 +9,24 @@ namespace Servirtium.Core
 {
     public class PassThroughInteractionMonitor : IInteractionMonitor
     {
-        private readonly HttpClient _httpClient;
+        private readonly IServiceInteroperation _service;
         private readonly Uri _redirectHost;
 
-        public PassThroughInteractionMonitor(Uri redirectHost) : this(redirectHost, new HttpClient()) { }
+        public PassThroughInteractionMonitor(Uri redirectHost) : this(redirectHost, new ServiceInteropViaSystemNetHttp()) { }
 
-        public PassThroughInteractionMonitor(Uri redirectHost, HttpClient httpClient)
+        public PassThroughInteractionMonitor(Uri redirectHost, IServiceInteroperation service)
         {
             _redirectHost = redirectHost;
-            _httpClient = httpClient;
+            _service = service;
         }
 
 
         public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
         {
-            var request = new HttpRequestMessage(interaction.Method, new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"));
-            var response = await _httpClient.SendAsync(request);
-            var body = await response.Content.ReadAsStringAsync();
-            return new ServiceResponse(
-                body,
-                response.Content.Headers.ContentType,
-                response.StatusCode,
-                response.Headers
-                    .SelectMany(h=>
-                        h.Value.Select(v=>(h.Key, v))
-                    ).Append(("Content-Length", body.Length.ToString())).ToArray()
-                );
+            return await _service.InvokeServiceEndpoint(
+                interaction.Method, null, null,
+                new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
+                interaction.RequestHeaders);
         }
 
         public IInteraction NewInteraction(int interactionNum, string context, string method, string path, string url)
