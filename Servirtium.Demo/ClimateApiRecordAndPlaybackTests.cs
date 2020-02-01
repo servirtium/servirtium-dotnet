@@ -4,6 +4,7 @@ using Servirtium.Core.Record;
 using Servirtium.Core.Replay;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using static Servirtium.Core.FindAndReplaceScriptWriter;
@@ -28,14 +29,30 @@ namespace Servirtium.Demo
                 }, new MarkdownScriptWriter()));
             yield return 
             (
-                AspNetCoreServirtiumServer.Default(recorder, ClimateApi.DEFAULT_SITE),
+                AspNetCoreServirtiumServer.WithTransforms(
+                    recorder,
+                    new SimpleInteractionTransforms(
+                        ClimateApi.DEFAULT_SITE,
+                        new Regex[0],
+                        new[] {
+                        "Date:", "X-", "Strict-Transport-Security",
+                        "Content-Security-Policy", "Cache-Control", "Secure", "HttpOnly",
+                        "Set-Cookie: climatedata.cookie=" }.Select(pattern => new Regex(pattern))
+                    )),
                 new ClimateApi(new Uri("http://localhost:5000"))
             ); 
             var replayer = new MarkdownReplayer();
             replayer.LoadScriptFile($@"..\..\..\test_recording_output\{script}");
             yield return
             (
-                AspNetCoreServirtiumServer.Default(replayer, ClimateApi.DEFAULT_SITE),
+                AspNetCoreServirtiumServer.WithTransforms(
+                    replayer,
+                    new SimpleInteractionTransforms(
+                        ClimateApi.DEFAULT_SITE,
+                        new Regex[0],
+                        new[] { new Regex("Date:") }
+
+                    )),
                 new ClimateApi(new Uri("http://localhost:5000"))
             );
         }

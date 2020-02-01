@@ -36,7 +36,7 @@ namespace Servirtium.Core.Replay
 
             if (!interaction.RequestHeaders.All(header=> recordedInteraction.RequestHeaders.Contains(header)))
             {
-                throw new ArgumentException($"Fixed & filtered HTTP request headers: {Environment.NewLine}{interaction.RequestHeaders}{Environment.NewLine} do not contain all the headers recorded in conversation for interaction {interaction.Number}: {Environment.NewLine}{recordedInteraction.RequestHeaders}.");
+                //throw new ArgumentException($"Fixed & filtered HTTP request headers: {Environment.NewLine}{interaction.RequestHeaders}{Environment.NewLine} do not contain all the headers recorded in conversation for interaction {interaction.Number}: {Environment.NewLine}{recordedInteraction.RequestHeaders}.");
             }
             if (interaction.RequestContentType != recordedInteraction.RequestContentType)
             {

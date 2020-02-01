@@ -19,7 +19,6 @@
     },
     "Kestrel": {
       "commandName": "Project",
-      "launchBrowser": true,
       "launchUrl": "climateweb/rest/v1/country/annualavg/pr/1980/1999/gbr.xml",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

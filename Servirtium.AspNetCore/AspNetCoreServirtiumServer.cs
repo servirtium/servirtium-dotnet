@@ -57,22 +57,39 @@ namespace Servirtium.AspNetCore
                             targetHost,
                             serviceRequestInteraction,
                             false);
+                        var clientResponse = interactionTransforms.TransformRealServiceResponseForClient(responseFromService);
 
-
+                        //Always remove the 'Transfer-Encoding: chunked' header if present.
+                        //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
+                        //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.
+                        clientResponse = clientResponse
+                            .WithRevisedHeaders(
+                                clientResponse.Headers
+                                    .Where((h)=>!(h.Name.ToLower()=="transfer-encoding" && h.Value.ToLower()=="chunked")))
+                            .WithReadjustedContentLength();
                         ctx.Response.OnCompleted(() =>
                         {
                             Console.WriteLine($"{requestInteraction.Method} Request to {targetHost}{requestInteraction.Path} returned to client with code {ctx.Response.StatusCode}");
                             return Task.CompletedTask;
                         });
 
-                        if (responseFromService.Body != null)
-                        {
-                            await ctx.Response.WriteAsync(responseFromService.Body.ToString());
+                        //Transfer adjusted headers to the response going out to the client
+                        foreach ((string headerName, string headerValue) in clientResponse.Headers)
+                        { 
+                            if (ctx.Response.Headers.TryGetValue(headerName, out var headerInResponse))
+                            {
+                                ctx.Response.Headers[headerName] = new StringValues(headerInResponse.Append(headerValue).ToArray());
+                            }
+                            else 
+                            {
+                                ctx.Response.Headers[headerName] = new StringValues(headerValue);
+                            }
                         }
-                        else
+                        if (clientResponse.Body != null)
                         {
-                            await ctx.Response.CompleteAsync();
+                            await ctx.Response.WriteAsync(clientResponse.Body.ToString());
                         }
+                        await ctx.Response.CompleteAsync();
                     });
 
                 });

@@ -9,7 +9,7 @@ namespace Servirtium.Core
 {
     public class ServiceResponse
     {
-        public IEnumerable<(string, string)> Headers { get; }
+        public IEnumerable<(string Name, string Value)> Headers { get; }
         public object? Body { get; }
         public MediaTypeHeaderValue? ContentType { get; }
         public HttpStatusCode StatusCode { get; }
@@ -25,15 +25,26 @@ namespace Servirtium.Core
 
         public ServiceResponse WithRevisedHeaders(IEnumerable<(string, string)> headers)=>new ServiceResponse(Body, ContentType, StatusCode, headers);
 
-        public ServiceResponse WithRevisedBody(string body) => 
-            new ServiceResponse(body, ContentType, StatusCode, Headers.Select(h =>
+        public ServiceResponse WithRevisedBody(string body, bool createContentLengthHeader = false)
+        {
+            //ToArray() required to evaluate the Select and set 'createContentLengthHeader' to false if a content length is found
+            IEnumerable<(string, string)> headersWithAdjustedContentLength = Headers.Select(h =>
             {
-                (string name, string value) = h;
-                if (name == "Content-Length" || name == "content-length")
+                if (h.Name == "Content-Length" || h.Name == "content-length")
                 {
-                    return (name, (body?.Length ?? 0).ToString());
+                    createContentLengthHeader = false;
+                    return (h.Name, (body.Length).ToString());
                 }
                 else return h;
-            }).ToArray());
+            }).ToArray();
+            if (createContentLengthHeader)
+            {
+                headersWithAdjustedContentLength = headersWithAdjustedContentLength.Append(("Content-Length", body.Length.ToString()));
+            }
+            return new ServiceResponse(body, ContentType, StatusCode, headersWithAdjustedContentLength);
+        }
+            
+
+        public ServiceResponse WithReadjustedContentLength() => (Body is string stringBody) ? WithRevisedBody(stringBody) : this;
     }
 }

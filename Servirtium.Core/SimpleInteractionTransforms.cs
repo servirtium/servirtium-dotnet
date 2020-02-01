@@ -11,7 +11,7 @@ namespace Servirtium.Core
 
 
         private readonly string _realServiceHost;
-        private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeadersExcludePatterns;
+        private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeaderExcludePatterns;
 
 
         public SimpleInteractionTransforms(Uri realServiceHost) : this(realServiceHost, new Regex[0], new Regex[0])
@@ -21,7 +21,7 @@ namespace Servirtium.Core
         {
             _realServiceHost = realServiceHost.Host;
             _requestHeaderExcludePatterns = requestHeaderExcludePatterns;
-            _responseHeadersExcludePatterns = responseHeadersExcludePatterns;
+            _responseHeaderExcludePatterns = responseHeadersExcludePatterns;
         }
 
         public IInteraction TransformClientRequestForRealService(IInteraction clientRequest)
@@ -44,5 +44,11 @@ namespace Servirtium.Core
                 );
             return builder.Build();
         }
+
+
+        public ServiceResponse TransformRealServiceResponseForClient(ServiceResponse serviceResponse)=> serviceResponse.WithRevisedHeaders
+            (    //Remove unwanted headers from service response
+                serviceResponse.Headers.Where(h => !_responseHeaderExcludePatterns.Any(pattern => pattern.IsMatch($"{h.Item1}: {h.Item2}")))
+            );
     }
 }

@@ -9,7 +9,7 @@ namespace Servirtium.Core
 
         IInteraction TransformClientRequestForRealService(IInteraction clientRequest) => clientRequest;
 
-        IInteraction TransformRealServiceResponseForClient(IInteraction serviceResponse) => serviceResponse;
+        ServiceResponse TransformRealServiceResponseForClient(ServiceResponse serviceResponse) => serviceResponse;
 
     }
 }

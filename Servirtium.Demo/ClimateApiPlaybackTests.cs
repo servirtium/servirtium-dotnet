@@ -3,7 +3,9 @@ using Servirtium.Core;
 using Servirtium.Core.Replay;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Servirtium.Demo
 {
@@ -16,7 +18,14 @@ namespace Servirtium.Demo
             replayer.LoadScriptFile($@"..\..\..\test_playbacks\{script}");
             yield return
             (
-                AspNetCoreServirtiumServer.Default(replayer, ClimateApi.DEFAULT_SITE),
+                AspNetCoreServirtiumServer.WithTransforms(
+                    replayer, 
+                    new SimpleInteractionTransforms(
+                        ClimateApi.DEFAULT_SITE, 
+                        new Regex[0], 
+                        new[] { new Regex("Date:") }
+
+                    )),
                 new ClimateApi(new Uri("http://localhost:5000"))
             );
         }

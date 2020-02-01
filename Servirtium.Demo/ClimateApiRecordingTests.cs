@@ -3,6 +3,7 @@ using Servirtium.Core;
 using Servirtium.Core.Record;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using static Servirtium.Core.FindAndReplaceScriptWriter;
@@ -27,7 +28,16 @@ namespace Servirtium.Demo
                 }, new MarkdownScriptWriter()));
             yield return 
             (
-                AspNetCoreServirtiumServer.Default(recorder, ClimateApi.DEFAULT_SITE),
+                AspNetCoreServirtiumServer.WithTransforms(
+                    recorder,
+                    new SimpleInteractionTransforms(
+                        ClimateApi.DEFAULT_SITE,
+                        new Regex[0],
+                        new[] {
+                        "Date:", "X-", "Strict-Transport-Security",
+                        "Content-Security-Policy", "Cache-Control", "Secure", "HttpOnly",
+                        "Set-Cookie: climatedata.cookie=" }.Select(pattern => new Regex(pattern))
+                    )),
                 new ClimateApi(new Uri("http://localhost:5000"))
             );
         }
