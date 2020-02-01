@@ -13,8 +13,8 @@ namespace Servirtium.Demo
         {
             yield return
             (
-                AspNetCoreServirtiumServer.Default(new PassThroughInteractionMonitor(ClimateApi.DEFAULT_SITE), ClimateApi.DEFAULT_SITE),
-                new ClimateApi(new Uri("http://localhost:5000"))
+                AspNetCoreServirtiumServer.Default(1234, new PassThroughInteractionMonitor(ClimateApi.DEFAULT_SITE), ClimateApi.DEFAULT_SITE),
+                new ClimateApi(new Uri("http://localhost:1234"))
             );
         }
     }

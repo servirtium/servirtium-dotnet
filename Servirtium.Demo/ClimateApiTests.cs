@@ -19,7 +19,6 @@ namespace Servirtium.Demo
                 {
                     server.Start();
                     verification(api);
-                    //Assert.Equal(988.8454972331015, api.getAveAnnualRainfall(1980, 1999, "gbr").Result, 0);
                 }
                 finally
                 {

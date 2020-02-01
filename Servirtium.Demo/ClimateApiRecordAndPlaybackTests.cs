@@ -18,7 +18,6 @@ namespace Servirtium.Demo
         {
             var recorder = new MarkdownRecorder(
                 ClimateApi.DEFAULT_SITE, $@"..\..\..\test_recording_output\{script}",
-                new ServiceInteropViaSystemNetHttp(),
                 new FindAndReplaceScriptWriter(new[] {
                     new RegexReplacement(new Regex("Set-Cookie: AWSALB=.*"), "Set-Cookie: AWSALB=REPLACED-IN-RECORDING; Expires=Thu, 15 Jan 2099 11:11:11 GMT; Path=/"),
                     new RegexReplacement(new Regex("Set-Cookie: TS0137860d=.*"), "Set-Cookie: TS0137860d=ALSO-REPLACED-IN-RECORDING; Path=/"),
@@ -30,6 +29,7 @@ namespace Servirtium.Demo
             yield return 
             (
                 AspNetCoreServirtiumServer.WithTransforms(
+                    1234,
                     recorder,
                     new SimpleInteractionTransforms(
                         ClimateApi.DEFAULT_SITE,
@@ -39,21 +39,21 @@ namespace Servirtium.Demo
                         "Content-Security-Policy", "Cache-Control", "Secure", "HttpOnly",
                         "Set-Cookie: climatedata.cookie=" }.Select(pattern => new Regex(pattern))
                     )),
-                new ClimateApi(new Uri("http://localhost:5000"))
+                new ClimateApi(new Uri("http://localhost:1234"))
             ); 
             var replayer = new MarkdownReplayer();
             replayer.LoadScriptFile($@"..\..\..\test_recording_output\{script}");
             yield return
             (
                 AspNetCoreServirtiumServer.WithTransforms(
+                    1234,
                     replayer,
                     new SimpleInteractionTransforms(
                         ClimateApi.DEFAULT_SITE,
                         new Regex[0],
                         new[] { new Regex("Date:") }
-
                     )),
-                new ClimateApi(new Uri("http://localhost:5000"))
+                new ClimateApi(new Uri("http://localhost:1234"))
             );
         }
     }

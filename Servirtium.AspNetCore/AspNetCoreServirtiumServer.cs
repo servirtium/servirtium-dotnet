@@ -20,23 +20,28 @@ namespace Servirtium.AspNetCore
         private readonly InteractionCounter _interactionCounter = new InteractionCounter();
 
         private readonly IInteractionMonitor _interactionMonitor;
-
-        
-        public static AspNetCoreServirtiumServer WithTransforms(IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, interactionTransforms);
-        public static AspNetCoreServirtiumServer Default(IInteractionMonitor monitor, Uri serviceHost) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost));
+      
+        public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, interactionTransforms, port);
+        public static AspNetCoreServirtiumServer Default(int port, IInteractionMonitor monitor, Uri serviceHost) =>
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, new SimpleInteractionTransforms(serviceHost), port);
         public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), monitor, interactionTransforms);
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), monitor, interactionTransforms, null);
 
         //private static readonly 
-        public AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms)
+        private AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms, int? port)
         {
             _interactionMonitor = monitor;
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
-            {
+            {                    
+                if (port != null)
+                {
+                    //If a port is specified, override urls with specified port, listening on all available hosts, for HTTP.
+                    webBuilder.UseUrls($"http://*:{port}");
+                }
                 webBuilder.Configure(app =>
                 {
+
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");

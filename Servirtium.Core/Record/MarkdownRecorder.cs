@@ -14,9 +14,9 @@ namespace Servirtium.Core.Record
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly string _targetFile;
 
-        public MarkdownRecorder(Uri redirectHost, string targetFile) : this(redirectHost, targetFile, new ServiceInteropViaSystemNetHttp(), new MarkdownScriptWriter()) { }
+        public MarkdownRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
-        public MarkdownRecorder(Uri redirectHost, string targetFile, IServiceInteroperation service, IScriptWriter scriptWriter, IDictionary<int, IInteraction>? interactions = null)
+        public MarkdownRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
         {
             _redirectHost = redirectHost;
             _service = service;

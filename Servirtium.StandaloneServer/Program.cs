@@ -1,16 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Servirtium.AspNetCore;
 using Servirtium.Core;
 using Servirtium.Core.Replay;
 
-namespace Servirtium.AspNetCore
+namespace Servirtium.StandaloneServer
 {
     public class Program
     {
