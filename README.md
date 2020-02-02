@@ -50,19 +50,21 @@ Replaying:
             server.stop();
 ```
 
+See full demo project for more complete example code: https://github.com/stephenhand/servirtium-demo-dotnet-climate-tck
+
 ## Current Status
 
 Currently working through the new implementation guide:
 
 https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md
 
-All steps up until 3 are completed.
+All steps up until 4 are completed.
 
 ## Roadmap
 
 Current roadmap in priority order:
 
-* Complete steps 4-7 of the implementation guide.
+* Complete steps 5-7 of the implementation guide.
 
 * Add injectable logging support using the `Microsoft.Extensions.Logging`.
 
