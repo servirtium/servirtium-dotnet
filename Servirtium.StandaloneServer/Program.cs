@@ -10,7 +10,7 @@ namespace Servirtium.StandaloneServer
     {
         public static void Main(string[] args)
         {
-            var replayer = new MarkdownReplayer();
+            var replayer = new InteractionReplayer();
             replayer.LoadScriptFile($@"..\Servirtium.Demo\test_playbacks\averageRainfallForGreatBritainFrom1980to1999Exists.md");
 
             AspNetCoreServirtiumServer.WithCommandLineArgs(args, replayer, new SimpleInteractionTransforms(

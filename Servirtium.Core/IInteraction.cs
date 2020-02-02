@@ -18,7 +18,7 @@ namespace Servirtium.Core
 
         public MediaTypeHeaderValue? RequestContentType { get; }
 
-        public IEnumerable<(string, string)> RequestHeaders { get; }
+        public IEnumerable<(string Name, string Value)> RequestHeaders { get; }
         public bool HasRequestBody => RequestBody != null && RequestContentType != null;
 
         public string? RequestBody { get; }
@@ -27,7 +27,7 @@ namespace Servirtium.Core
 
         public MediaTypeHeaderValue? ResponseContentType { get; }
 
-        public IEnumerable<(string, string)> ResponseHeaders { get; }
+        public IEnumerable<(string Name, string Value)> ResponseHeaders { get; }
 
         public string? ResponseBody { get; }
 
@@ -53,7 +53,7 @@ namespace Servirtium.Core
 
         public MediaTypeHeaderValue? ResponseContentType => default;
 
-        public IEnumerable<(string, string)> ResponseHeaders => new (string, string)[0];
+        public IEnumerable<(string Name, string Value)> ResponseHeaders => new (string, string)[0];
 
         public string? ResponseBody => default;
     }

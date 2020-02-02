@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Servirtium.Core.Record
 {
-    public class MarkdownRecorder : IInteractionMonitor
+    public class InteractionRecorder : IInteractionMonitor
     {
         private readonly IServiceInteroperation _service;
         private readonly IScriptWriter _scriptWriter;
@@ -14,9 +14,9 @@ namespace Servirtium.Core.Record
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly string _targetFile;
 
-        public MarkdownRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
+        public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
-        public MarkdownRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
+        public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
         {
             _redirectHost = redirectHost;
             _service = service;

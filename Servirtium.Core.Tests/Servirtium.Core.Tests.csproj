@@ -17,4 +17,10 @@
     <ProjectReference Include="..\Servirtium.Core\Servirtium.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="markdown_conversations\single_get.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
