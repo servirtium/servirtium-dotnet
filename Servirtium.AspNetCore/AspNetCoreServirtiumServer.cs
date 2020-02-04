@@ -63,7 +63,7 @@ namespace Servirtium.AspNetCore
                             serviceRequestInteraction,
                             false);
                         var clientResponse = interactionTransforms.TransformRealServiceResponseForClient(responseFromService);
-
+                        monitor.NoteCompletedInteraction(serviceRequestInteraction, clientResponse);
                         //Always remove the 'Transfer-Encoding: chunked' header if present.
                         //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
                         //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.

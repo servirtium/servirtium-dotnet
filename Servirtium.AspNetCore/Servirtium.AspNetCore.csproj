@@ -4,14 +4,14 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <PackageId>Handy.ServirtiumPOC.AspNetCore</PackageId>
+    <PackageId>Servirtium.AspNetCore</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
     <VersionSuffix>dev.2</VersionSuffix>
     <PackageProjectUrl>https://github.com/stephenhand/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
     <Product>Servirtium</Product>
-    <Description>Prototype of a .NET Core Servirtium implementation, this is a personal project, NOT an official Servirtium package.</Description>
+    <Description>ASP.NET Core Servirtium implementation.</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 

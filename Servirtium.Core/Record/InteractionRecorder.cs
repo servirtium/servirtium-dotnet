@@ -49,6 +49,25 @@ namespace Servirtium.Core.Record
             return response;
         }
 
+        public void NoteCompletedInteraction(IInteraction requestInteraction, ServiceResponse responseFromService) 
+        {
+            var builder = new ImmutableInteraction.Builder()
+             .From(requestInteraction)
+             .ResponseHeaders(responseFromService.Headers)
+             .StatusCode(responseFromService.StatusCode);
+
+            if (responseFromService.Body != null && responseFromService.ContentType != null)
+            {
+                builder.ResponseBody(responseFromService.Body.ToString(), responseFromService.ContentType);
+            }
+            else
+            {
+                builder.RemoveResponseBody();
+            }
+            var interactionToRecord = builder.Build();
+            _allInteractions[interactionToRecord.Number] = interactionToRecord;
+        }
+
         public void FinishedScript(int interactionNum, bool failed)
         {
       
