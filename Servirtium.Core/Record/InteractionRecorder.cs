@@ -33,7 +33,9 @@ namespace Servirtium.Core.Record
                 interaction.RequestHeaders);
             var builder = new ImmutableInteraction.Builder()
                 .From(interaction)
-                .ResponseHeaders(response.Headers);
+                .ResponseHeaders(response.Headers)
+                .StatusCode(response.StatusCode);
+
             if (response.Body != null && response.ContentType != null)
             {
                 builder.ResponseBody(response.Body.ToString(), response.ContentType);

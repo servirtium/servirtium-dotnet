@@ -4,14 +4,14 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
 
-    <PackageId>Handy.ServirtiumPOC.Core</PackageId>
+    <PackageId>Servirtium.Core</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>dev.1</VersionSuffix>
+    <VersionSuffix>dev.2</VersionSuffix>
     <PackageProjectUrl>https://github.com/stephenhand/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
     <Product>Servirtium</Product>
-    <Description>Prototype of a .NET Core Servirtium core logic implementation, this is a personal project, NOT an official Servirtium package.</Description>
+    <Description>.NET Core Servirtium core logic implementation. Requires consumers to provide their own IServertium web server implentation or use the Servertium.AspNetCore package</Description>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
