@@ -85,7 +85,7 @@ namespace Servirtium.Core
                             throw new ArgumentException($"This markdown could not be parsed as an interaction: {interactionMarkdown}");
                         }
 
-                        var builder = new MarkdownInteraction.Builder()
+                        var builder = new ImmutableInteraction.Builder()
                             .Number(Int32.Parse(match.Groups["number"].Value))
                             .Method(new HttpMethod(match.Groups["method"].Value))
                             .Path(match.Groups["path"].Value)

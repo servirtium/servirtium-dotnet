@@ -31,7 +31,7 @@ namespace Servirtium.Core.Record
                 interaction.Method, null, null,
                 new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
                 interaction.RequestHeaders);
-            var builder = new MarkdownInteraction.Builder()
+            var builder = new ImmutableInteraction.Builder()
                 .From(interaction)
                 .ResponseHeaders(response.Headers);
             if (response.Body != null && response.ContentType != null)

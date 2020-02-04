@@ -15,7 +15,7 @@ namespace Servirtium.Core.Tests
 
         private static readonly Uri SERVIRTIUM_SERVICE_URI = new Uri("http://servirtium-service.com");
 
-        IInteraction _baseInteraction = new MarkdownInteraction.Builder()
+        IInteraction _baseInteraction = new ImmutableInteraction.Builder()
             .Number(1337)
             .Path("down/the/garden")
             .RequestHeaders(new[] { ("mock-header", "mock-value"), ("another-mock-header", "another-mock-value") })
@@ -102,7 +102,7 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void TransformClientRequestForRealService_HostHeaderInRequest_ReplacesHostHeaderValueWithRealServiceHost()
         {
-            var interaction = new MarkdownInteraction.Builder()
+            var interaction = new ImmutableInteraction.Builder()
                 .From(_baseInteraction)
                 .RequestHeaders(new[] { ("Host", SERVIRTIUM_SERVICE_URI.Host) })
                 .Build();
@@ -113,13 +113,13 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void TransformClientRequestForRealService_HostHeaderInRequest_RetainsCasingOfHostHeader()
         {
-            var interaction = new MarkdownInteraction.Builder()
+            var interaction = new ImmutableInteraction.Builder()
                 .From(_baseInteraction)
                 .RequestHeaders(new[] { ("host", SERVIRTIUM_SERVICE_URI.Host) })
                 .Build();
             var transformed = new SimpleInteractionTransforms(REAL_SERVICE_URI).TransformClientRequestForRealService(interaction);
             Assert.Equal(("host", REAL_SERVICE_URI.Host), transformed.RequestHeaders.First());
-            interaction = new MarkdownInteraction.Builder()
+            interaction = new ImmutableInteraction.Builder()
                 .From(_baseInteraction)
                 .RequestHeaders(new[] { ("hOsT", SERVIRTIUM_SERVICE_URI.Host) })
                 .Build();
@@ -130,7 +130,7 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void TransformClientRequestForRealService_HostHeaderInRequestAndHostMatchesRequestExcludePattern_RemovesHostHeader()
         {
-            var interaction = new MarkdownInteraction.Builder()
+            var interaction = new ImmutableInteraction.Builder()
                 .From(_baseInteraction)
                 .RequestHeaders(new[] { ("Host", SERVIRTIUM_SERVICE_URI.Host), ("mock-header", "mock-value") })
                 .Build();

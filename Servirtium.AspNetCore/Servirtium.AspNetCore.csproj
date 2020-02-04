@@ -6,7 +6,7 @@
     <OutputType>Library</OutputType>
     <PackageId>Handy.ServirtiumPOC.AspNetCore</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>dev.1</VersionSuffix>
+    <VersionSuffix>dev.2</VersionSuffix>
     <PackageProjectUrl>https://github.com/stephenhand/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />

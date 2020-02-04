@@ -9,11 +9,11 @@ using System.Text.RegularExpressions;
 
 namespace Servirtium.Core
 {
-    public class MarkdownInteraction : IInteraction
+    public class ImmutableInteraction : IInteraction
     {
         
         //private constructor for use in builder
-        private MarkdownInteraction(
+        private ImmutableInteraction(
             int number,
             HttpMethod method,
             string path,
@@ -176,13 +176,13 @@ namespace Servirtium.Core
                 return this;
             }
 
-            public MarkdownInteraction Build()
+            public ImmutableInteraction Build()
             {
                 if (!_built)
                 {
                     _built = true;
 
-                    return new MarkdownInteraction(_number, _method, _path, _requestContentType, _requestHeaders, _requestBody, _statusCode, _responseContentType, _responseHeaders, _responseBody);
+                    return new ImmutableInteraction(_number, _method, _path, _requestContentType, _requestHeaders, _requestBody, _statusCode, _responseContentType, _responseHeaders, _responseBody);
                 }
                 throw new InvalidOperationException("This builder class is only intended to build a single instance. Use a new Builder for each instance you want to create.");
             }

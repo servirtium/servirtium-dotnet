@@ -18,6 +18,30 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="markdown_conversations\outofsequence_conversation_validate.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\outofsequence_conversation.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_error_nobody.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_error.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_delete.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\conversation.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_put.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_post.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="markdown_conversations\single_get.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -72,7 +72,7 @@ namespace Servirtium.Core
                 var updatedResponseHeaders = interaction.ResponseHeaders
                     .Select(h => FixHeaderForRecording(h, _replacementsForRecording
                             .Where(rr => (rr.Context & ReplacementContext.ResponseHeader) == ReplacementContext.ResponseHeader)));
-                var builder = new MarkdownInteraction.Builder()
+                var builder = new ImmutableInteraction.Builder()
                     .From(interaction)
                     .RequestHeaders(updatedRequestHeaders)
                     .ResponseHeaders(updatedResponseHeaders);

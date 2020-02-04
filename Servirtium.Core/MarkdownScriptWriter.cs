@@ -17,26 +17,34 @@ namespace Servirtium.Core
             {
                 if (interactions.TryGetValue(i, out var interaction))
                 {
+                    if (interaction.Number != i)
+                    {
+                        throw new ArgumentException($"Interaction at dictionary key '{i}' is number '{interaction.Number}'. The dictionary should always be keyed on the interaction's nuymber or it cannot be written.");
+                    }
                     var markdown = $@"## Interaction {interaction.Number}: {interaction.Method} {interaction.Path}
 
 ### Request headers recorded for playback:
 
-```{(interaction.RequestHeaders.Any() ? Environment.NewLine : "")}{String.Join(Environment.NewLine, interaction.RequestHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
+```
+{String.Join(Environment.NewLine, interaction.RequestHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
 ```
 
 ### Request body recorded for playback ({interaction.RequestContentType?.MediaType ?? ""}):
 
-```{(interaction.RequestBody != null ? $"{Environment.NewLine}{interaction.RequestBody}" : "")}
+```
+{interaction.RequestBody}
 ```
 
 ### Response headers recorded for playback:
 
-```{(interaction.ResponseHeaders.Any() ? Environment.NewLine : "")}{String.Join(Environment.NewLine, interaction.ResponseHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
+```
+{String.Join(Environment.NewLine, interaction.ResponseHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
 ```
 
-### Response body recorded for playback ({interaction.StatusCode}: {interaction.ResponseContentType?.MediaType ?? ""}):
+### Response body recorded for playback ({(int)interaction.StatusCode}: {interaction.ResponseContentType?.MediaType ?? ""}):
 
-```{(interaction.ResponseBody != null ? $"{Environment.NewLine}{interaction.ResponseBody}" : "")}
+```
+{interaction.ResponseBody}
 ```
 
 ";
@@ -44,7 +52,7 @@ namespace Servirtium.Core
                 }
                 else
                 {
-                    Debug.Assert(false, $"Interaction number {i} was missing (final interaction number: {finalInteractionNumber}). The MarkdownScriptWriter requires a contiguously numbered set of interactions, starting at zero.");
+                    throw new ArgumentException($"Interaction number {i} was missing (final interaction number: {finalInteractionNumber}). The MarkdownScriptWriter requires a contiguously numbered set of interactions, starting at zero.");
                 }
             }
         }

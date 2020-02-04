@@ -26,7 +26,7 @@ namespace Servirtium.Core
 
         public IInteraction TransformClientRequestForRealService(IInteraction clientRequest)
         {
-            var builder = new MarkdownInteraction.Builder()
+            var builder = new ImmutableInteraction.Builder()
                 .From(clientRequest)
                 .RequestHeaders(clientRequest.RequestHeaders
                     //Remove unwanted headers from client request

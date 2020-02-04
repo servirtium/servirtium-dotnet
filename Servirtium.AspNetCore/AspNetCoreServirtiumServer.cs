@@ -45,7 +45,7 @@ namespace Servirtium.AspNetCore
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                        var requestInteraction = new MarkdownInteraction.Builder()
+                        var requestInteraction = new ImmutableInteraction.Builder()
                             .Number(_interactionCounter.Bump())
                             .Method(new System.Net.Http.HttpMethod(ctx.Request.Method))
                             .Path($"{ctx.Request.Path}{ctx.Request.QueryString}")
@@ -77,6 +77,8 @@ namespace Servirtium.AspNetCore
                             Console.WriteLine($"{requestInteraction.Method} Request to {targetHost}{requestInteraction.Path} returned to client with code {ctx.Response.StatusCode}");
                             return Task.CompletedTask;
                         });
+
+                        ctx.Response.StatusCode = (int)clientResponse.StatusCode;
 
                         //Transfer adjusted headers to the response going out to the client
                         foreach ((string headerName, string headerValue) in clientResponse.Headers)
