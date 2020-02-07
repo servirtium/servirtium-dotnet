@@ -24,7 +24,9 @@ namespace Servirtium.Core
         public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
         {
             return await _service.InvokeServiceEndpoint(
-                interaction.Method, null, null,
+                interaction.Method, 
+                interaction.HasRequestBody ? interaction.RequestBody : null,
+                interaction.HasRequestBody ? interaction.RequestContentType : null,
                 new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
                 interaction.RequestHeaders);
         }

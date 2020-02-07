@@ -28,7 +28,7 @@ namespace Servirtium.Core.Record
         public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
         {
             var response = await _service.InvokeServiceEndpoint(
-                interaction.Method, null, null,
+                interaction.Method, interaction.RequestBody, interaction.RequestContentType,
                 new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
                 interaction.RequestHeaders);
             var builder = new ImmutableInteraction.Builder()

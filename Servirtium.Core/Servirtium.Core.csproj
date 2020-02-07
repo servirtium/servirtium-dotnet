@@ -6,7 +6,7 @@
 
     <PackageId>Servirtium.Core</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>dev.2</VersionSuffix>
+    <VersionSuffix>dev.3</VersionSuffix>
     <PackageProjectUrl>https://github.com/stephenhand/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />

@@ -29,7 +29,7 @@ namespace Servirtium.Core
 {String.Join(Environment.NewLine, interaction.RequestHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
 ```
 
-### Request body recorded for playback ({interaction.RequestContentType?.MediaType ?? ""}):
+### Request body recorded for playback ({interaction.RequestContentType?.ToString() ?? ""}):
 
 ```
 {interaction.RequestBody}
@@ -41,7 +41,7 @@ namespace Servirtium.Core
 {String.Join(Environment.NewLine, interaction.ResponseHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
 ```
 
-### Response body recorded for playback ({(int)interaction.StatusCode}: {interaction.ResponseContentType?.MediaType ?? ""}):
+### Response body recorded for playback ({(int)interaction.StatusCode}: {interaction.ResponseContentType?.ToString() ?? ""}):
 
 ```
 {interaction.ResponseBody}

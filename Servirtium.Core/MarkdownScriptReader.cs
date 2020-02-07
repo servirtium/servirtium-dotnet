@@ -21,7 +21,7 @@ namespace Servirtium.Core
               [\r\n]+                                                                                                                   # (captures 'method' and 'path')
               \#\#\#\s+Request\s+headers\s+recorded\s+for\s+playback:                                                                   # Request Header Title              ### Request headers recorded for playback: 
               [\r\n]+                                                                                                                   #
-              ```(?:\n|\r|\r\n)(?<requestHeaders>[\w\W]*?)(?:\n|\r|\r\n)```                                                             # Request Headers                   ```
+              ```(?:\r\n|\n|\r)(?<requestHeaders>[\w\W]*?)(?:\r\n|\n|\r)```                                                             # Request Headers                   ```
                                                                                                                                         # (captures 'requestHeaders')       Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2
                                                                                                                                         #                                   User-Agent: Servirtium-Testing
                                                                                                                                         #                                   Connection: keep-alive
@@ -30,13 +30,13 @@ namespace Servirtium.Core
               [\r\n]+                                                                                                                   #
               \#\#\#\s+Request\s+body\s+recorded\s+for\s+playback\s+\((?<requestContentType>[^\n\r]+)?\):                               # Request Body Title                ### Request body recorded for playback (text/plain):
               [\r\n]+                                                                                                                   # (captures 'requestContentType')
-              ```(?:\n|\r|\r\n)(?<requestBody>[\w\W]*?)(?:\n|\r|\r\n)```                                                                # Request Body                      ```
+              ```(?:\r\n|\n|\r)(?<requestBody>[\w\W]*?)(?:\r\n|\n|\r)```                                                                # Request Body                      ```
                                                                                                                                         # (captures 'requestBody')          request body contents
                                                                                                                                         #                                   ```
               [\r\n]+
               \#\#\#\s+Response\s+headers\s+recorded\s+for\s+playback:                                                                    #Response Header Title              ### Response headers recorded for playback:
               [\r\n]+
-              ```(?:\n|\r|\r\n)(?<responseHeaders>[\w\W]*?)(?:\n|\r|\r\n)```                                                            # Response Headers                  ```
+              ```(?:\r\n|\n|\r)(?<responseHeaders>[\w\W]*?)(?:\r\n|\n|\r)```                                                            # Response Headers                  ```
                                                                                                                                         # (captures 'responseHeaders')      Content-Type: application/json
                                                                                                                                         #                                   Connection: keep-alive
                                                                                                                                         #                                   Transfer-Encoding: chunked
@@ -45,7 +45,7 @@ namespace Servirtium.Core
               \#\#\#\s+Response\s+body\s+recorded\s+for\s+playback\s+\((?<statusCode>[0-9]+):\s+(?<responseContentType>[^\n\r]+)?\):    # Response Body Title               ### Response body recorded for playback (200: application/json):
               [\r\n]+                                                                                                                   # (captures 'statusCode' 
                                                                                                                                         # and 'responseContentType')
-              ```(?:\n|\r|\r\n)(?<responseBody>[\w\W]*?)(?:\n|\r|\r\n)```                                                               # Response Body                     ```
+              ```(?:\r\n|\n|\r)(?<responseBody>[\w\W]*?)(?:\r\n|\n|\r)```                                                               # Response Body                     ```
                                                                                                                                         # (captures 'responseBody')         response body contents
                                                                                                                                         #                                   ```
             "
@@ -96,13 +96,13 @@ namespace Servirtium.Core
                         var requestBody = match.Groups["requestBody"].Value;
                         if (match.Groups["requestContentType"].Success && requestBody.Any())
                         {
-                            builder.RequestBody(requestBody, new MediaTypeHeaderValue(match.Groups["requestContentType"].Value));
+                            builder.RequestBody(requestBody, MediaTypeHeaderValue.Parse(match.Groups["requestContentType"].Value));
                         }
 
                         var responseBody = match.Groups["responseBody"].Value;
                         if (match.Groups["responseContentType"].Success && responseBody.Any())
                         {
-                            builder.ResponseBody(responseBody, new MediaTypeHeaderValue(match.Groups["responseContentType"].Value));
+                            builder.ResponseBody(responseBody, MediaTypeHeaderValue.Parse(match.Groups["responseContentType"].Value));
                         }
                         return builder.Build();
                     })

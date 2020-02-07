@@ -22,6 +22,26 @@ namespace Servirtium.Core
         public async Task<ServiceResponse> InvokeServiceEndpoint(HttpMethod method, object? clientRequestBody, MediaTypeHeaderValue? clientRequestContentType, Uri url, IEnumerable<(string, string)> clientRequestHeaders)
         {
             var request = new HttpRequestMessage(method, url);
+            if (clientRequestBody!=null && clientRequestContentType !=null)
+            {
+                request.Content = new StringContent(clientRequestBody.ToString());
+                request.Content.Headers.ContentType = clientRequestContentType;
+            }
+            foreach((string name, string value) in clientRequestHeaders)
+            {
+                var lowerCaseName = name.ToLower();
+                if (lowerCaseName != "content-type")
+                {
+                    if (lowerCaseName.StartsWith("content"))
+                    {
+                        request.Content?.Headers.Add(name, value);
+                    }
+                    else
+                    {
+                        request.Headers.Add(name, value);
+                    }
+                }
+            }
             var response = await _httpClient.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
             return new ServiceResponse(

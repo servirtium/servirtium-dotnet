@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -41,11 +43,10 @@ namespace Servirtium.AspNetCore
                 }
                 webBuilder.Configure(app =>
                 {
-
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                        var requestInteraction = new ImmutableInteraction.Builder()
+                        var requestBuilder = new ImmutableInteraction.Builder()
                             .Number(_interactionCounter.Bump())
                             .Method(new System.Net.Http.HttpMethod(ctx.Request.Method))
                             .Path($"{ctx.Request.Path}{ctx.Request.QueryString}")
@@ -55,8 +56,13 @@ namespace Servirtium.AspNetCore
                                 ctx.Request.Headers
                                     .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
                                     .ToArray()
-                            )
-                            .Build();
+                            );
+                        if (!String.IsNullOrWhiteSpace(ctx.Request.ContentType))
+                        {
+                            var bodyString = await new StreamReader(ctx.Request.Body).ReadToEndAsync();
+                            requestBuilder.RequestBody(bodyString, MediaTypeHeaderValue.Parse(ctx.Request.ContentType));
+                        }
+                        var requestInteraction = requestBuilder.Build();
                         var serviceRequestInteraction = interactionTransforms.TransformClientRequestForRealService(requestInteraction);
                         var responseFromService = await monitor.GetServiceResponseForRequest(
                             targetHost,
