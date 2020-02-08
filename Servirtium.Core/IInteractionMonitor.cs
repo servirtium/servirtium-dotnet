@@ -12,7 +12,7 @@ namespace Servirtium.Core
 
         Task<ServiceResponse> GetServiceResponseForRequest(Uri host,
                                                      IInteraction interaction,
-                                                     bool lowerCaseHeaders);
+                                                     bool lowerCaseHeaders = false);
 
         void NoteCompletedInteraction(IInteraction requestInteraction, ServiceResponse responseFromService) { }
 

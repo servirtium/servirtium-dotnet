@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Servirtium.Core.Record
+namespace Servirtium.Core
 {
     public class InteractionRecorder : IInteractionMonitor
     {
@@ -25,7 +25,7 @@ namespace Servirtium.Core.Record
             _targetFile = targetFile;
         }
 
-        public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
+        public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
         {
             var response = await _service.InvokeServiceEndpoint(
                 interaction.Method, interaction.RequestBody, interaction.RequestContentType,
