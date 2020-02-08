@@ -1,6 +1,6 @@
 # Servirtium .NET
 
-.NET Core 3.1 port of the Servirtium Java implementation: https://github.com/servirtium/servirtium-java
+.NET Core 3.1 implementation of Servirtium, based on the Java implementation: https://github.com/servirtium/servirtium-java
 
 ## Examples
 
