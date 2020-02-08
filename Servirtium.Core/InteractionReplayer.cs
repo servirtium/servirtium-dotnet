@@ -36,7 +36,7 @@ namespace Servirtium.Core
 
             if (!interaction.RequestHeaders.All(header=> recordedInteraction.RequestHeaders.Contains(header)))
             {
-                throw new ArgumentException($"Fixed & filtered HTTP request headers: {Environment.NewLine}{interaction.RequestHeaders}{Environment.NewLine} do not contain all the headers recorded in conversation for interaction {interaction.Number}: {Environment.NewLine}{recordedInteraction.RequestHeaders}.");
+                throw new ArgumentException($"Fixed & filtered HTTP request headers: {Environment.NewLine}{String.Join(Environment.NewLine, interaction.RequestHeaders.Select(h => $"{h.Name}: {h.Value}"))}{Environment.NewLine} do not contain all the headers recorded in conversation for interaction {interaction.Number}: {Environment.NewLine}{String.Join(Environment.NewLine, recordedInteraction.RequestHeaders.Select(h=>$"{h.Name}: {h.Value}"))}.");
             }
             if (interaction.RequestContentType?.ToString() != recordedInteraction.RequestContentType?.ToString())
             {
@@ -53,7 +53,10 @@ namespace Servirtium.Core
 
         public void LoadScriptFile(string filename) 
         {
-            ReadPlaybackConversation(File.OpenText(filename), filename);
+            using (var fileContents = File.OpenText(filename))
+            {
+                ReadPlaybackConversation(fileContents, filename);
+            }
 
         }
 
