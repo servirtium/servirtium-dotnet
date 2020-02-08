@@ -54,11 +54,14 @@ See full demo project for more complete example code: https://github.com/stephen
 
 ## Current Status
 
-Currently working through the new implementation guide:
-
-https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md
+Currently working through the new implementation guide: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
 
 All steps up to and including 5 are completed.
+
+### Published NuGet assemblies
+
+* [Servirtium.Core/0.0.1-dev.3](https://www.nuget.org/packages/Servirtium.Core/0.0.1-dev.3)
+* [Servirtium.AspNetCore/0.0.1-dev.3](https://www.nuget.org/packages/Servirtium.AspNetCore/0.0.1-dev.3)
 
 ## Roadmap
 
