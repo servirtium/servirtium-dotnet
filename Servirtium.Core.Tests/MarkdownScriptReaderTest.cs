@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -43,6 +44,8 @@ namespace Servirtium.Core.Tests
 
             Assert.Equal(0, interaction.Number);
             Assert.Equal("/a/mock/service", interaction.Path);
+
+            Assert.Empty(interaction.Notes);
 
             Assert.Equal(HttpMethod.Get, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
@@ -186,6 +189,77 @@ namespace Servirtium.Core.Tests
             Assert.Equal(5, interaction.Number);
             Assert.Equal("/a/mock/service_1", interaction.Path);
             Assert.Equal(HttpMethod.Get, interaction.Method);
+        }
+
+        [Fact]
+        public void Read_TextNote_ReturnsInteractionWithTextNote()
+        {
+            var interactions = ReadSampleMarkdown("single_get_note.md");
+            Assert.Equal(1, interactions.Count);
+            var interaction = interactions[0];
+
+            Assert.Equal(0, interaction.Number);
+            Assert.Equal("/a/mock/service", interaction.Path);
+            Assert.Single(interaction.Notes);
+            var note = interaction.Notes.First();
+            Assert.Equal(IInteraction.Note.NoteType.Text, note.Type);
+            Assert.Equal("A Note", note.Title);
+            Assert.Equal(@"Lots of
+noteworthy things
+to be
+noting.".Replace("\r\n","\n"), note.Content);
+        }
+
+        [Fact]
+        public void Read_CodeNote_ReturnsInteractionWithCodeNote()
+        {
+            var interactions = ReadSampleMarkdown("single_get_codenote.md");
+            Assert.Equal(1, interactions.Count);
+            var interaction = interactions[0];
+
+            Assert.Equal(0, interaction.Number);
+            Assert.Equal("/a/mock/service", interaction.Path);
+            Assert.Single(interaction.Notes);
+            var note = interaction.Notes.First();
+            Assert.Equal(IInteraction.Note.NoteType.Code, note.Type);
+            Assert.Equal("A Code Note", note.Title);
+            Assert.Equal(@"Lots of
+noteworthy code
+to be
+running.".Replace("\r\n", "\n"), note.Content);
+        }
+
+        [Fact]
+        public void Read_MultipleNotes_ReturnsInteractionWithCodeNote()
+        {
+            var interactions = ReadSampleMarkdown("single_get_notes.md");
+            Assert.Equal(1, interactions.Count);
+            var interaction = interactions[0];
+
+            Assert.Equal(0, interaction.Number);
+            Assert.Equal("/a/mock/service", interaction.Path);
+            Assert.Equal(3, interaction.Notes.Count());
+            var note = interaction.Notes.First();
+            Assert.Equal(IInteraction.Note.NoteType.Text, note.Type);
+            Assert.Equal("A Note", note.Title);
+            Assert.Equal(@"Lots of
+noteworthy things
+to be
+noting.".Replace("\r\n", "\n"), note.Content);
+            note = interaction.Notes.ElementAt(1);
+            Assert.Equal(IInteraction.Note.NoteType.Code, note.Type);
+            Assert.Equal("A Code Note", note.Title);
+            Assert.Equal(@"Lots of
+noteworthy code
+to be
+running.".Replace("\r\n", "\n"), note.Content);
+            note = interaction.Notes.Last();
+            Assert.Equal(IInteraction.Note.NoteType.Text, note.Type);
+            Assert.Equal("Another Note", note.Title);
+            Assert.Equal(@"Even more
+noteworthy things
+to be
+noting.".Replace("\r\n", "\n"), note.Content);
         }
 
 

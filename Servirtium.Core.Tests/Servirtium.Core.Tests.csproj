@@ -37,6 +37,15 @@
     <None Update="markdown_conversations\conversation.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="markdown_conversations\single_get_codenote.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_get_notes.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_get_note.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="markdown_conversations\single_put.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -15,6 +15,7 @@ namespace Servirtium.Core
         //private constructor for use in builder
         private ImmutableInteraction(
             int number,
+            IEnumerable<IInteraction.Note> notes,
             HttpMethod method,
             string path,
             MediaTypeHeaderValue? requestContentType,
@@ -26,6 +27,7 @@ namespace Servirtium.Core
             string? responseBody)
         {
             Number = number;
+            Notes = notes;
             Method = method;
             Path = path;
 
@@ -42,6 +44,8 @@ namespace Servirtium.Core
         }
 
         public int Number { get; }
+
+        public IEnumerable<IInteraction.Note> Notes { get; }
 
         public HttpMethod Method { get; }
 
@@ -67,6 +71,8 @@ namespace Servirtium.Core
 
             private int _number;
 
+            private IEnumerable<IInteraction.Note> _notes = new IInteraction.Note[0];
+
             private HttpMethod _method = HttpMethod.Get;
 
             private string _path = "";
@@ -88,6 +94,12 @@ namespace Servirtium.Core
             public Builder Number(int number)
             {
                 _number = number;
+                return this;
+            }
+
+            public Builder Notes(IEnumerable<IInteraction.Note> notes)
+            {
+                _notes = notes;
                 return this;
             }
 
@@ -182,7 +194,7 @@ namespace Servirtium.Core
                 {
                     _built = true;
 
-                    return new ImmutableInteraction(_number, _method, _path, _requestContentType, _requestHeaders, _requestBody, _statusCode, _responseContentType, _responseHeaders, _responseBody);
+                    return new ImmutableInteraction(_number, _notes, _method, _path, _requestContentType, _requestHeaders, _requestBody, _statusCode, _responseContentType, _responseHeaders, _responseBody);
                 }
                 throw new InvalidOperationException("This builder class is only intended to build a single instance. Use a new Builder for each instance you want to create.");
             }

@@ -19,6 +19,13 @@ namespace Servirtium.Core
             @"(?xm)
               \#\#\s+Interaction\s+(?<number>[0-9]+):\s+(?<method>[A-Za-z]+)\s+(?<path>[^\n\r]+)                                        # Interaction title                 ## Interaction 0: POST /my-api/rest/v1/stuff
               [\r\n]+                                                                                                                   # (captures 'method' and 'path')
+              (?:                                                                                                                       # Overall capture for each note section. 'noteTitle' and 'noteContent' named groups can capture multiple values
+              \#\#\s\[Note\]\s(?<noteTitle>[^\n\r]+)?:                                                                                  # Match the heading and extract the title
+              (?:\r\n|\n|\r)                                                                                                            #
+              (?:\r\n|\n|\r)                                                                                                            #
+              (?<noteContent>.*?)                                                                                                       # Captures raw content. Type will be determined later based on if it is in a code block or not
+              [\r\n]+
+              )*
               \#\#\#\s+Request\s+headers\s+recorded\s+for\s+playback:                                                                   # Request Header Title              ### Request headers recorded for playback: 
               [\r\n]+                                                                                                                   #
               ```(?:\r\n|\n|\r)(?<requestHeaders>[\w\W]*?)(?:\r\n|\n|\r)```                                                             # Request Headers                   ```
@@ -85,8 +92,29 @@ namespace Servirtium.Core
                             throw new ArgumentException($"This markdown could not be parsed as an interaction: {interactionMarkdown}");
                         }
 
+                        //Parse captured notes & determine if they are code or text
+                        var notes = match.Groups["noteTitle"].Success ?
+                            match.Groups["noteTitle"].Captures.Select((c, idx) =>
+                            {
+                                var content = match.Groups["noteContent"].Captures[idx].Value;
+                                var contentType = IInteraction.Note.NoteType.Text;
+                                //Need to check for both types of line ending regardless of platform (no, it's not chacking for 90's Mac line endings)
+                                if (content.StartsWith("```\n") && content.EndsWith("\n```"))
+                                {
+                                    contentType = IInteraction.Note.NoteType.Code;
+                                    content = content.Substring(4, content.Length - 8);
+                                }
+                                else if (content.StartsWith("```\r\n") && content.EndsWith("\r\n```"))
+                                {
+                                    contentType = IInteraction.Note.NoteType.Code;
+                                    content = content.Substring(5, content.Length - 10);
+                                }
+                                return new IInteraction.Note(contentType, c.Value, content);
+                            })
+                            : new IInteraction.Note[0];
                         var builder = new ImmutableInteraction.Builder()
                             .Number(Int32.Parse(match.Groups["number"].Value))
+                            .Notes(notes)
                             .Method(new HttpMethod(match.Groups["method"].Value))
                             .Path(match.Groups["path"].Value)
                             .RequestHeaders(HeaderTextToHeaderList(match.Groups["requestHeaders"].Value))

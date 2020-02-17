@@ -10,7 +10,29 @@ namespace Servirtium.Core
     public interface IInteraction
     {
 
+        public struct Note
+        {
+            public enum NoteType
+            { 
+                Text,
+                Code
+            }
+
+            public Note(NoteType type, string title, string content)
+            {
+                Type = type;
+                Title = title;
+                Content = content;
+            }
+
+            public NoteType Type { get; }
+            public string Title { get; }
+            public string Content { get; }
+        }
+
         public int Number { get; }
+
+        public IEnumerable<Note> Notes { get; }
 
         public HttpMethod Method { get; }
 
@@ -38,6 +60,8 @@ namespace Servirtium.Core
     class NoopInteraction : IInteraction
     {
         public int Number => default;
+
+        public IEnumerable<IInteraction.Note> Notes => new IInteraction.Note[0];
 
         public HttpMethod Method => HttpMethod.Get;
 

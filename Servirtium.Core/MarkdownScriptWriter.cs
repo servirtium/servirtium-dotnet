@@ -21,9 +21,19 @@ namespace Servirtium.Core
                     {
                         throw new ArgumentException($"Interaction at dictionary key '{i}' is number '{interaction.Number}'. The dictionary should always be keyed on the interaction's nuymber or it cannot be written.");
                     }
+                    var noteMarkdown = String.Join("", interaction.Notes.Select(n => {
+                        var noteContentHeader = n.Type == IInteraction.Note.NoteType.Code ? $"```{Environment.NewLine}" : "";
+                        var noteContentFooter = n.Type == IInteraction.Note.NoteType.Code ? $"{Environment.NewLine}```" : "";
+                        return $@"## [Note] {n.Title}:
+
+{noteContentHeader}{n.Content}{noteContentFooter}
+
+";
+                    }));
+
                     var markdown = $@"## Interaction {interaction.Number}: {interaction.Method} {interaction.Path}
 
-### Request headers recorded for playback:
+{noteMarkdown}### Request headers recorded for playback:
 
 ```
 {String.Join(Environment.NewLine, interaction.RequestHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}"))}
