@@ -50,24 +50,38 @@ Replaying:
             server.stop();
 ```
 
-See full demo project for more complete example code: https://github.com/stephenhand/servirtium-demo-dotnet-climate-tck
+See full demo project for more complete example code: https://github.com/servirtium/demo-dotnet-climate-tck
+
+## CLI Commands
+
+### Build Solution
+
+From the solution directory:
+
+`dotnet build`
+
+### Run All Tests
+
+From the solution directory:
+
+`dotnet test`
+
+### Published NuGet assemblies
+
+* [Servirtium.Core/0.0.1-dev.4](https://www.nuget.org/packages/Servirtium.Core/0.0.1-dev.4)
+* [Servirtium.AspNetCore/0.0.1-dev.4](https://www.nuget.org/packages/Servirtium.AspNetCore/0.0.1-dev.4)
 
 ## Current Status
 
 Currently working through the new implementation guide: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
 
-All steps up to and including 5 are completed.
-
-### Published NuGet assemblies
-
-* [Servirtium.Core/0.0.1-dev.3](https://www.nuget.org/packages/Servirtium.Core/0.0.1-dev.3)
-* [Servirtium.AspNetCore/0.0.1-dev.3](https://www.nuget.org/packages/Servirtium.AspNetCore/0.0.1-dev.3)
+All steps up to and including 6 are completed.
 
 ## Roadmap
 
 Current roadmap in priority order:
 
-* Complete steps 6 and 7 of the implementation guide.
+* Complete steps 7 and 10 of the implementation guide.
 
 * Add support for binary request & response bodies.
 
