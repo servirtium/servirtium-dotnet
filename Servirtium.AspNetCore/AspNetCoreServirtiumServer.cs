@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,6 +20,8 @@ namespace Servirtium.AspNetCore
         private readonly InteractionCounter _interactionCounter = new InteractionCounter();
 
         private readonly IInteractionMonitor _interactionMonitor;
+
+        private readonly ICollection<IInteraction.Note> _notesForNextInteraction = new LinkedList<IInteraction.Note>();
       
         public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), monitor, interactionTransforms, port);
@@ -57,6 +57,13 @@ namespace Servirtium.AspNetCore
                                     .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
                                     .ToArray()
                             );
+
+                        lock (_notesForNextInteraction)
+                        {
+                            requestBuilder.Notes(_notesForNextInteraction);
+                            _notesForNextInteraction.Clear();
+                        }
+
                         if (!String.IsNullOrWhiteSpace(ctx.Request.ContentType))
                         {
                             var bodyString = await new StreamReader(ctx.Request.Body).ReadToEndAsync();
@@ -125,6 +132,16 @@ namespace Servirtium.AspNetCore
         {
             FinishedScript();
             await _host.StopAsync();
+        }
+
+        public void MakeNote(string title, string note)
+        {
+            _notesForNextInteraction.Add(new IInteraction.Note(IInteraction.Note.NoteType.Text, title, note));
+        }
+
+        public void MakeCodeNote(string title, string code)
+        {
+            _notesForNextInteraction.Add(new IInteraction.Note(IInteraction.Note.NoteType.Code, title, code));
         }
     }
 }

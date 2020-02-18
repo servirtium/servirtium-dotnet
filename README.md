@@ -81,7 +81,7 @@ All steps up to and including 6 are completed.
 
 Current roadmap in priority order:
 
-* Complete steps 7 and 10 of the implementation guide.
+* Complete steps 8 and 10 of the implementation guide.
 
 * Add support for binary request & response bodies.
 
