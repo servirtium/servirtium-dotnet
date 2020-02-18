@@ -164,6 +164,7 @@ namespace Servirtium.Core
             public Builder From(IInteraction existing)
             {
                 Number(existing.Number);
+                Notes(existing.Notes);
                 Method(existing.Method);
                 Path(existing.Path);
                 RequestHeaders(existing.RequestHeaders);

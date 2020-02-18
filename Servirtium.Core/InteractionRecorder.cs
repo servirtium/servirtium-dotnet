@@ -12,17 +12,21 @@ namespace Servirtium.Core
         private readonly IScriptWriter _scriptWriter;
         private readonly Uri _redirectHost;
         private readonly IDictionary<int, IInteraction> _allInteractions;
-        private readonly string _targetFile;
+        private readonly Func<TextWriter> _writerFactory;
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
+            : this(redirectHost, () => File.CreateText(targetFile), scriptWriter, service, interactions)
+        { }
+
+        public InteractionRecorder(Uri redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
         {
             _redirectHost = redirectHost;
             _service = service;
             _scriptWriter = scriptWriter;
             _allInteractions = interactions ?? new Dictionary<int, IInteraction> { };
-            _targetFile = targetFile;
+            _writerFactory = outputWriterFactory;
         }
 
         public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
@@ -31,21 +35,6 @@ namespace Servirtium.Core
                 interaction.Method, interaction.RequestBody, interaction.RequestContentType,
                 new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
                 interaction.RequestHeaders);
-            var builder = new ImmutableInteraction.Builder()
-                .From(interaction)
-                .ResponseHeaders(response.Headers)
-                .StatusCode(response.StatusCode);
-
-            if (response.Body != null && response.ContentType != null)
-            {
-                builder.ResponseBody(response.Body.ToString(), response.ContentType);
-            }
-            else
-            {
-                builder.RemoveResponseBody();
-            }
-            var interactionToRecord = builder.Build();
-            _allInteractions[interactionToRecord.Number] = interactionToRecord;
             return response;
         }
 
@@ -65,13 +54,13 @@ namespace Servirtium.Core
                 builder.RemoveResponseBody();
             }
             var interactionToRecord = builder.Build();
-            _allInteractions[interactionToRecord.Number] = interactionToRecord;
+            _allInteractions.Add(interactionToRecord.Number, interactionToRecord);
         }
 
         public void FinishedScript(int interactionNum, bool failed)
         {
-      
-            using (var fs = File.CreateText(_targetFile))
+
+            using (var fs = _writerFactory())
             {
                 _scriptWriter.Write(fs, _allInteractions);
             }
