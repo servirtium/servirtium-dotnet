@@ -44,10 +44,10 @@ namespace Servirtium.Core.Tests
         {
             new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get, 
-                    null, 
-                    null, 
-                    new Uri("http://a.mock.service/endpoint"), 
+                    HttpMethod.Get,
+                    null,
+                    null,
+                    new Uri("http://a.mock.service/endpoint"),
                     new (string, string)[0])
                 .Wait();
 
@@ -66,8 +66,8 @@ namespace Servirtium.Core.Tests
                     null,
                     null,
                     new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[] { 
-                        ("a-request-header", "something"), 
+                    new (string, string)[] {
+                        ("a-request-header", "something"),
                         ("another-request-header", "something-else") })
                 .Wait();
 
@@ -114,7 +114,7 @@ namespace Servirtium.Core.Tests
 
             _mockMessageHandler.Protected()
                 .Verify<Task<HttpResponseMessage>>("SendAsync", Times.Once(), true, ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
-            
+
             Assert.Equal(HttpMethod.Post, _sentRequest!.Method);
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _sentRequest!.RequestUri);
             Assert.Equal(MediaTypeHeaderValue.Parse("text/css"), _sentRequest!.Content.Headers.ContentType);
@@ -196,4 +196,5 @@ namespace Servirtium.Core.Tests
             Assert.Single(response.Headers);
             Assert.Contains(("Content-Length", "A RESPONSE".Length.ToString()), response.Headers);
         }
+    }
 }
