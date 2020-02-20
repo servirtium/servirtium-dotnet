@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,6 +12,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using Servirtium.Core;
 
+
+[assembly: InternalsVisibleTo("Servirtium.AspNetCore.Tests")]
 namespace Servirtium.AspNetCore
 {
     public class AspNetCoreServirtiumServer : IServirtiumServer
@@ -31,7 +34,7 @@ namespace Servirtium.AspNetCore
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), monitor, interactionTransforms, null);
 
         //private static readonly 
-        private AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms, int? port)
+        internal AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms, int? port)
         {
             _interactionMonitor = monitor;
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
@@ -43,75 +46,27 @@ namespace Servirtium.AspNetCore
                 }
                 webBuilder.Configure(app =>
                 {
+                    var handler = new AspNetCoreServirtiumRequestHandler(_interactionMonitor, interactionTransforms, _interactionCounter, _notesForNextInteraction);
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                        var requestBuilder = new ImmutableInteraction.Builder()
-                            .Number(_interactionCounter.Bump())
-                            .Method(new System.Net.Http.HttpMethod(ctx.Request.Method))
-                            .Path($"{ctx.Request.Path}{ctx.Request.QueryString}")
-                            //Remap headers from a dictionary of string lists to a list of (string, string) tuples
-                            .RequestHeaders
-                            (
-                                ctx.Request.Headers
-                                    .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
-                                    .ToArray()
-                            );
+                        var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
 
-                        lock (_notesForNextInteraction)
-                        {
-                            requestBuilder.Notes(_notesForNextInteraction);
-                            _notesForNextInteraction.Clear();
-                        }
-
-                        if (!String.IsNullOrWhiteSpace(ctx.Request.ContentType))
-                        {
-                            var bodyString = await new StreamReader(ctx.Request.Body).ReadToEndAsync();
-                            requestBuilder.RequestBody(bodyString, MediaTypeHeaderValue.Parse(ctx.Request.ContentType));
-                        }
-                        var requestInteraction = requestBuilder.Build();
-                        var serviceRequestInteraction = interactionTransforms.TransformClientRequestForRealService(requestInteraction);
-                        var responseFromService = await monitor.GetServiceResponseForRequest(
-                            targetHost,
-                            serviceRequestInteraction,
-                            false);
-                        var clientResponse = interactionTransforms.TransformRealServiceResponseForClient(responseFromService);
-                        monitor.NoteCompletedInteraction(serviceRequestInteraction, clientResponse);
-                        //Always remove the 'Transfer-Encoding: chunked' header if present.
-                        //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
-                        //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.
-                        clientResponse = clientResponse
-                            .WithRevisedHeaders(
-                                clientResponse.Headers
-                                    .Where((h)=>!(h.Name.ToLower()=="transfer-encoding" && h.Value.ToLower()=="chunked")))
-                            .WithReadjustedContentLength();
                         ctx.Response.OnCompleted(() =>
                         {
-                            Console.WriteLine($"{requestInteraction.Method} Request to {targetHost}{requestInteraction.Path} returned to client with code {ctx.Response.StatusCode}");
+                            Console.WriteLine($"{ctx.Request.Method} Request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
                             return Task.CompletedTask;
                         });
-
-                        ctx.Response.StatusCode = (int)clientResponse.StatusCode;
-
-                        //Transfer adjusted headers to the response going out to the client
-                        foreach ((string headerName, string headerValue) in clientResponse.Headers)
-                        { 
-                            if (ctx.Response.Headers.TryGetValue(headerName, out var headerInResponse))
-                            {
-                                ctx.Response.Headers[headerName] = new StringValues(headerInResponse.Append(headerValue).ToArray());
-                            }
-                            else 
-                            {
-                                ctx.Response.Headers[headerName] = new StringValues(headerValue);
-                            }
-                        }
-                        if (clientResponse.Body != null)
+                        List<IInteraction.Note> notes;
+                        lock (_notesForNextInteraction)
                         {
-                            await ctx.Response.WriteAsync(clientResponse.Body.ToString());
+                            notes = new List<IInteraction.Note>(_notesForNextInteraction);
+                            _notesForNextInteraction.Clear();
                         }
+                        await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, notes);
+
                         await ctx.Response.CompleteAsync();
                     });
-
                 });
             }).Build();
 
