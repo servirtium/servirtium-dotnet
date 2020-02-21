@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <PackageId>Servirtium.AspNetCore</PackageId>
-    <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>dev.6</VersionSuffix>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <!--<VersionSuffix>dev.6</VersionSuffix>-->
     <PackageProjectUrl>https://github.com/stephenhand/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
