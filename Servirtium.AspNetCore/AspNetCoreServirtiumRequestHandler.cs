@@ -28,29 +28,12 @@ namespace Servirtium.AspNetCore
         internal AspNetCoreServirtiumRequestHandler(
             IInteractionMonitor monitor,
             IInteractionTransforms interactionTransforms,
-            InteractionCounter interactionCounter,
-            ICollection<IInteraction.Note> notes
+            InteractionCounter interactionCounter
             )
         {
             _monitor = monitor;
             _interactionTransforms = interactionTransforms;
             _interactionCounter = interactionCounter;
-
-            HandleRequestDelegate = async ctx =>
-            {
-                var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";                
-                
-                ctx.Response.OnCompleted(() =>
-                {
-                    Console.WriteLine($"{ctx.Request.Method} Request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
-                    return Task.CompletedTask;
-                });
-
-                await HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, new List<IInteraction.Note>(notes));
-                
-                await ctx.Response.CompleteAsync();
-            };
         }
 
         internal async Task HandleRequest(
@@ -113,7 +96,5 @@ namespace Servirtium.AspNetCore
                 await responseBodyStream.WriteAsync(bodyBytes, 0, bodyBytes.Length);
             }
         }
-
-        internal RequestDelegate HandleRequestDelegate { get;  }
     }
 }

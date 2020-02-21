@@ -46,7 +46,7 @@ namespace Servirtium.AspNetCore
                 }
                 webBuilder.Configure(app =>
                 {
-                    var handler = new AspNetCoreServirtiumRequestHandler(_interactionMonitor, interactionTransforms, _interactionCounter, _notesForNextInteraction);
+                    var handler = new AspNetCoreServirtiumRequestHandler(_interactionMonitor, interactionTransforms, _interactionCounter);
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
