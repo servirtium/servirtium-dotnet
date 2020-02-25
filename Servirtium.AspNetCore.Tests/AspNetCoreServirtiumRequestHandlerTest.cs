@@ -32,7 +32,7 @@ namespace Servirtium.AspNetCore.Tests
 
         private readonly ICollection<IInteraction.Note> _notes = new IInteraction.Note[0];
 
-        private ServiceResponse _responseWithNoHeaders = new ServiceResponse("Rock your body right.", MediaTypeHeaderValue.Parse("text/plain"), HttpStatusCode.OK, new (string, string)[0]);
+        private ServiceResponse _responseWithNoHeaders = new ServiceResponse(Encoding.UTF8.GetBytes("Rock your body right."), MediaTypeHeaderValue.Parse("text/plain"), HttpStatusCode.OK, new (string, string)[0]);
 
         public AspNetCoreServirtiumRequestHandlerTest()
         {

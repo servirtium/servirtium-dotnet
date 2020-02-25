@@ -92,8 +92,7 @@ namespace Servirtium.AspNetCore
             }
             if (clientResponse.Body != null)
             {
-                byte[] bodyBytes = Encoding.UTF8.GetBytes(clientResponse.Body?.ToString() ?? "");
-                await responseBodyStream.WriteAsync(bodyBytes, 0, bodyBytes.Length);
+                await responseBodyStream.WriteAsync(clientResponse.Body, 0, clientResponse.Body.Length);
             }
         }
     }

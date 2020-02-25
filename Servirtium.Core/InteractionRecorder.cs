@@ -47,7 +47,7 @@ namespace Servirtium.Core
 
             if (responseFromService.Body != null && responseFromService.ContentType != null)
             {
-                builder.ResponseBody(responseFromService.Body.ToString(), responseFromService.ContentType);
+                builder.ResponseBody(UTF8Encoding.UTF8.GetString(responseFromService.Body), responseFromService.ContentType);
             }
             else
             {

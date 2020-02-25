@@ -43,7 +43,7 @@ namespace Servirtium.Core
                 }
             }
             var response = await _httpClient.SendAsync(request);
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsByteArrayAsync();
             return new ServiceResponse(
                 body,
                 response.Content.Headers.ContentType,

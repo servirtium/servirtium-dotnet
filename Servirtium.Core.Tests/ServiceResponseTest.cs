@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using Xunit;
 
 namespace Servirtium.Core.Tests
@@ -15,16 +17,21 @@ namespace Servirtium.Core.Tests
             ("third", "headers")
         };
 
+        private static string BodyAsString(byte[]? body)=> Encoding.UTF8.GetString(body!);
+
+        private static byte[] StringAsBody(string body) => Encoding.UTF8.GetBytes(body);
+
+
         [Fact]
         public void WithRevisedHeaders_ValidHeaders_ReturnsServiceResponseWithNewHeadersAndOtherPropertiesTheSame()
         {
-            var revised = new ServiceResponse("The body.", TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, generateTestHeaders())
+            var revised = new ServiceResponse(StringAsBody("The body."), TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, generateTestHeaders())
                 .WithRevisedHeaders(new[] {
                     ("first", "some"),
                     ("second", "new"),
                     ("third", "headers")
                 });
-            Assert.Equal("The body.", revised.Body);
+            Assert.Equal("The body.", BodyAsString(revised.Body));
             Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(new[] {
@@ -37,9 +44,9 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void WithRevisedBody_ValidBodyAndNoContentLengthHeader_ReturnsServiceResponseWithNewBodyAndOtherPropertiesTheSame()
         {
-            var revised = new ServiceResponse("The body.", TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, generateTestHeaders())
+            var revised = new ServiceResponse(StringAsBody("The body."), TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, generateTestHeaders())
                 .WithRevisedBody("The new body.");
-            Assert.Equal("The new body.", revised.Body);
+            Assert.Equal("The new body.", BodyAsString(revised.Body));
             Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(generateTestHeaders(), revised.Headers);
@@ -48,13 +55,13 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void WithRevisedBody_ValidBodyAndCapitalisedContentLengthHeader_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
         {
-            var revised = new ServiceResponse("The body.", TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{
+            var revised = new ServiceResponse(StringAsBody("The body."), TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{
                 ("first", "the"),
                 ("second", "original"),
                 ("Content-Length", "A gazillion"),
                 ("third", "headers")})
                 .WithRevisedBody("The new body.");
-            Assert.Equal("The new body.", revised.Body);
+            Assert.Equal("The new body.", BodyAsString(revised.Body));
             Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(
@@ -70,14 +77,14 @@ namespace Servirtium.Core.Tests
         public void WithRevisedBody_ValidBodyAndLowercaseContentLengthHeader_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
         {
 
-            var revised = new ServiceResponse("The body.", TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{ 
+            var revised = new ServiceResponse(StringAsBody("The body."), TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{ 
                 ("first", "the"),
                 ("second", "original"),
                 ("content-length", "A gazillion"),
                 ("third", "headers")
             })
                 .WithRevisedBody("The new body.");
-            Assert.Equal("The new body.", revised.Body);
+            Assert.Equal("The new body.", BodyAsString(revised.Body));
             Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(
@@ -93,14 +100,14 @@ namespace Servirtium.Core.Tests
         public void WithRevisedBody_ValidBodyAndContentLengthHeaderWithNonStandardCasing_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
         {
 
-            var revised = new ServiceResponse("The body.", TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{
+            var revised = new ServiceResponse(StringAsBody("The body."), TEST_MEDIA_TYPE, HttpStatusCode.Ambiguous, new[]{
                 ("first", "the"),
                 ("second", "original"),
                 ("CONTENT-LENGTH", "A gazillion"),
                 ("third", "headers")
             })
                 .WithRevisedBody("The new body.");
-            Assert.Equal("The new body.", revised.Body);
+            Assert.Equal("The new body.", BodyAsString(revised.Body));
             Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(

@@ -47,7 +47,8 @@ namespace Servirtium.Core
                 throw new ArgumentException($"HTTP request method '{interaction.RequestBody}' does not match method recorded in conversation for interaction {interaction.Number}, '{recordedInteraction.RequestBody}'.");
             }
             //Return completed task, no async logic required in the playback method
-            return Task.FromResult(new ServiceResponse(recordedInteraction.ResponseBody, recordedInteraction.ResponseContentType, recordedInteraction.StatusCode, recordedInteraction.ResponseHeaders));
+            var body = recordedInteraction.HasResponseBody ? Encoding.UTF8.GetBytes(recordedInteraction.ResponseBody) : null;
+            return Task.FromResult(new ServiceResponse(body, recordedInteraction.ResponseContentType, recordedInteraction.StatusCode, recordedInteraction.ResponseHeaders));
         }
 
 

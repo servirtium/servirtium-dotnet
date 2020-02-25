@@ -13,8 +13,6 @@ namespace Servirtium.AspNetCore.Tests
 
         private readonly Mock<IHost> _mockHost;
 
-        private Action<IWebHostBuilder>? _capturedHostConfigurer;
-
         public AspNetCoreServirtiumServerTest()
         {
             _mockHost = new Mock<IHost>();

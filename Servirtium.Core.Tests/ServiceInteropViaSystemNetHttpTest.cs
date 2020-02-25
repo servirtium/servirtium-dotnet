@@ -2,6 +2,7 @@
 using Moq.Protected;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -17,6 +18,8 @@ namespace Servirtium.Core.Tests
     {
         private Mock<HttpMessageHandler> _mockMessageHandler;
         private HttpRequestMessage? _sentRequest;
+
+        private static string BodyAsString(byte[]? body) => Encoding.UTF8.GetString(body!);
 
         private HttpResponseMessage _responseToReturn = new HttpResponseMessage
         {
@@ -135,7 +138,7 @@ namespace Servirtium.Core.Tests
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
-            Assert.Equal("A RESPONSE", response.Body);
+            Assert.Equal("A RESPONSE", BodyAsString(response.Body));
         }
 
         [Fact]
@@ -153,7 +156,7 @@ namespace Servirtium.Core.Tests
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
-            Assert.Equal("A RESPONSE", response.Body);
+            Assert.Equal("A RESPONSE", BodyAsString(response.Body!));
             Assert.Equal(3, response.Headers.Count());
             Assert.Contains(("a-response-header", "something"), response.Headers);
             Assert.Contains(("another-response-header", "something-else"), response.Headers);
@@ -192,7 +195,7 @@ namespace Servirtium.Core.Tests
                     new Uri("http://a.mock.service/endpoint"),
                     new (string, string)[0])
                 .Result;
-            Assert.Equal("A RESPONSE", response.Body);
+            Assert.Equal("A RESPONSE", BodyAsString(response.Body!));
             Assert.Single(response.Headers);
             Assert.Contains(("Content-Length", "A RESPONSE".Length.ToString()), response.Headers);
         }
