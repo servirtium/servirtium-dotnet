@@ -8,19 +8,19 @@ using System.Text;
 
 namespace Servirtium.Core
 {
-    interface IHttpMessage
+    public interface IHttpMessage
     {
         IEnumerable<(string Name, string Value)> Headers { get; }
         byte[]? Body { get; }
         MediaTypeHeaderValue? ContentType { get; }
     }
 
-    interface IRequestMessage : IHttpMessage
+    public interface IRequestMessage : IHttpMessage
     {
         HttpMethod Method { get; }
     }
 
-    interface IResponseMessage : IHttpMessage
+    public interface IResponseMessage : IHttpMessage
     {
         HttpStatusCode StatusCode { get; }
     }

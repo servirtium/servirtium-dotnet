@@ -14,7 +14,7 @@ namespace Servirtium.Core
                                                      IInteraction interaction,
                                                      bool lowerCaseHeaders = false);
 
-        void NoteCompletedInteraction(IInteraction requestInteraction, ServiceResponse responseFromService) { }
+        void NoteCompletedInteraction(IInteraction requestInteraction, IResponseMessage responseFromService) { }
 
         void CodeNoteForNextInteraction(String title, String multiline) { }
 

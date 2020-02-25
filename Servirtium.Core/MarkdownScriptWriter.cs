@@ -9,6 +9,7 @@ namespace Servirtium.Core
 {
     public class MarkdownScriptWriter : IScriptWriter
     {
+        private readonly IBodyFormatter _requestBodyFormatter, _responseBodyFormatter;
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
             int finalInteractionNumber = interactions.Keys.Max();

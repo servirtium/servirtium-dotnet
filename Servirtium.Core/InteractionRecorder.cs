@@ -14,6 +14,9 @@ namespace Servirtium.Core
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly Func<TextWriter> _writerFactory;
 
+        private readonly IBodyFormatter _requestBodyFormatter = new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter())
+            , _responseBodyFormatter = new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
+
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
@@ -38,7 +41,7 @@ namespace Servirtium.Core
             return response;
         }
 
-        public void NoteCompletedInteraction(IInteraction requestInteraction, ServiceResponse responseFromService) 
+        public void NoteCompletedInteraction(IInteraction requestInteraction, IResponseMessage responseFromService) 
         {
             var builder = new ImmutableInteraction.Builder()
              .From(requestInteraction)
@@ -47,7 +50,7 @@ namespace Servirtium.Core
 
             if (responseFromService.Body != null && responseFromService.ContentType != null)
             {
-                builder.ResponseBody(UTF8Encoding.UTF8.GetString(responseFromService.Body), responseFromService.ContentType);
+                builder.ResponseBody(_responseBodyFormatter.Write(responseFromService.Body, responseFromService.ContentType), responseFromService.ContentType);
             }
             else
             {
