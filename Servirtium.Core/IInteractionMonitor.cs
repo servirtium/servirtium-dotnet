@@ -10,7 +10,7 @@ namespace Servirtium.Core
     {
         void FinishedScript(int interactionNum, bool failed) { }
 
-        Task<ServiceResponse> GetServiceResponseForRequest(Uri host,
+        Task<IResponseMessage> GetServiceResponseForRequest(Uri host,
                                                      IInteraction interaction,
                                                      bool lowerCaseHeaders = false);
 

@@ -69,11 +69,13 @@ namespace Servirtium.AspNetCore
             //Always remove the 'Transfer-Encoding: chunked' header if present.
             //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
             //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.
-            clientResponse = clientResponse
-                 .WithRevisedHeaders(
+            clientResponse = new ServiceResponse.Builder()
+                .From(clientResponse)
+                 .Headers(
                      clientResponse.Headers
                          .Where((h) => !(h.Name.ToLower() == "transfer-encoding" && h.Value.ToLower() == "chunked")))
-                 .WithReadjustedContentLength();
+                 .FixContentLength()
+                 .Build();
 
 
             statusCodeSetter(clientResponse.StatusCode);

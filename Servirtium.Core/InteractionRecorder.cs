@@ -32,7 +32,7 @@ namespace Servirtium.Core
             _writerFactory = outputWriterFactory;
         }
 
-        public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
+        public async Task<IResponseMessage> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
         {
             var response = await _service.InvokeServiceEndpoint(
                 interaction.Method, interaction.RequestBody, interaction.RequestContentType,

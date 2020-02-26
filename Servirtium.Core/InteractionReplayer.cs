@@ -21,7 +21,7 @@ namespace Servirtium.Core
             _allInteractions = interactions ?? new Dictionary<int, IInteraction> { };
         }
 
-        public Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
+        public Task<IResponseMessage> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
         {
             //Validate the request is the same as it was when it was recorded
             var recordedInteraction = _allInteractions[interaction.Number];
@@ -47,8 +47,17 @@ namespace Servirtium.Core
                 throw new ArgumentException($"HTTP request method '{interaction.RequestBody}' does not match method recorded in conversation for interaction {interaction.Number}, '{recordedInteraction.RequestBody}'.");
             }
             //Return completed task, no async logic required in the playback method
-            var body = recordedInteraction.HasResponseBody ? Encoding.UTF8.GetBytes(recordedInteraction.ResponseBody) : null;
-            return Task.FromResult(new ServiceResponse(body, recordedInteraction.ResponseContentType, recordedInteraction.StatusCode, recordedInteraction.ResponseHeaders));
+            var builder = new ServiceResponse.Builder()
+                .StatusCode(recordedInteraction.StatusCode)
+                .Headers(recordedInteraction.ResponseHeaders);
+
+            if (recordedInteraction.HasResponseBody)
+            {
+                var body = Encoding.UTF8.GetBytes(recordedInteraction.ResponseBody);
+                builder.Body(body, recordedInteraction.ResponseContentType!);
+            }
+
+            return Task.FromResult<IResponseMessage>(builder.Build());
         }
 
 

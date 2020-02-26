@@ -22,7 +22,10 @@ namespace Servirtium.Core.Tests
             .ResponseHeaders(new[] { ("mock-response-header", "mock-value"), ("another-mock-response-header", "another-mock-value") })
             .Build();
 
-        ServiceResponse _baseResponse = new ServiceResponse(null, null, System.Net.HttpStatusCode.OK, new[] { ("mock-response-header", "mock-value"), ("another-mock-response-header", "another-mock-value") });
+        ServiceResponse _baseResponse = new ServiceResponse.Builder()
+            .StatusCode(System.Net.HttpStatusCode.OK)
+            .Headers(("mock-response-header", "mock-value"), ("another-mock-response-header", "another-mock-value"))
+            .Build();
 
         [Fact]
         public void TransformClientRequestForRealService_NoRequestHeadersToRemoveAndNoHostRequestHeader_ReturnsUnchangedClone()

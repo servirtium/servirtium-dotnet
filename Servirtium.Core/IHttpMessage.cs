@@ -11,8 +11,13 @@ namespace Servirtium.Core
     public interface IHttpMessage
     {
         IEnumerable<(string Name, string Value)> Headers { get; }
+
         byte[]? Body { get; }
+
         MediaTypeHeaderValue? ContentType { get; }
+
+        bool HasBody => Body != null && ContentType != null;
+
     }
 
     public interface IRequestMessage : IHttpMessage

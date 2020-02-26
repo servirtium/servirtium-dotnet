@@ -46,9 +46,12 @@ namespace Servirtium.Core
         }
 
 
-        public ServiceResponse TransformRealServiceResponseForClient(ServiceResponse serviceResponse)=> serviceResponse.WithRevisedHeaders
+        public ServiceResponse TransformRealServiceResponseForClient(IResponseMessage serviceResponse)=> new ServiceResponse.Builder()
+            .From(serviceResponse)
+            .Headers
             (    //Remove unwanted headers from service response
                 serviceResponse.Headers.Where(h => !_responseHeaderExcludePatterns.Any(pattern => pattern.IsMatch($"{h.Item1}: {h.Item2}")))
-            );
+            )
+            .Build();
     }
 }

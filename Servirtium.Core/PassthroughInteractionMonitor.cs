@@ -21,7 +21,7 @@ namespace Servirtium.Core
         }
 
 
-        public async Task<ServiceResponse> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
+        public async Task<IResponseMessage> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
         {
             return await _service.InvokeServiceEndpoint(
                 interaction.Method, 
@@ -29,11 +29,6 @@ namespace Servirtium.Core
                 interaction.HasRequestBody ? interaction.RequestContentType : null,
                 new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
                 interaction.RequestHeaders);
-        }
-
-        public IInteraction NewInteraction(int interactionNum, string context, string method, string path, string url)
-        {
-            throw new NotImplementedException();
         }
     }
 }

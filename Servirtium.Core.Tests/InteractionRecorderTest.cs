@@ -20,7 +20,11 @@ namespace Servirtium.Core.Tests
 
 
         private ServiceResponse createServiceResponse() => 
-            new ServiceResponse(Encoding.UTF8.GetBytes("The response body"), MediaTypeHeaderValue.Parse("text/plain"), HttpStatusCode.OK, ("response-header", "value"), ("another response-header", "another value"));
+            new ServiceResponse.Builder()
+            .Body("The response body", MediaTypeHeaderValue.Parse("text/plain"))
+            .StatusCode(HttpStatusCode.OK)
+            .Headers(("response-header", "value"), ("another response-header", "another value"))
+            .Build();
 
         private readonly Mock<IScriptWriter> _mockScriptWriter;
         private readonly Mock<IServiceInteroperation> _mockServiceInterop;
@@ -56,8 +60,6 @@ namespace Servirtium.Core.Tests
             _mockScriptWriter.Setup(sw => sw.Write(It.IsAny<TextWriter>(), It.IsAny<IDictionary<int, IInteraction>>())).Callback<TextWriter, IDictionary<int, IInteraction>>((tw, interactions) => _capturedInteractions = interactions);
 
             _mockWriter = new Mock<TextWriter>();
-
-            new ServiceResponse(Encoding.UTF8.GetBytes("The response body"), MediaTypeHeaderValue.Parse("text/plain"), HttpStatusCode.OK, ("response-header", "value"), ("another response-header", "another value"));
 
         }
 
