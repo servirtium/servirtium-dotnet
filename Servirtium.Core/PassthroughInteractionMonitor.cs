@@ -21,14 +21,13 @@ namespace Servirtium.Core
         }
 
 
-        public async Task<IResponseMessage> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders)
+        public async Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request, bool lowerCaseHeaders)
         {
             return await _service.InvokeServiceEndpoint(
-                interaction.Method, 
-                interaction.HasRequestBody ? interaction.RequestBody : null,
-                interaction.HasRequestBody ? interaction.RequestContentType : null,
-                new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
-                interaction.RequestHeaders);
+                new ServiceRequest.Builder()
+                    .From(request)
+                    .Url(new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{request.Url.PathAndQuery}"))
+                    .Build());
         }
     }
 }

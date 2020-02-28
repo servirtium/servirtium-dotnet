@@ -14,7 +14,7 @@ namespace Servirtium.Core.Tests
     {
         private readonly Mock<IScriptReader> _mockScriptReader;
         private readonly Mock<IInteraction> _mockRecordedInteraction;
-        private readonly Mock<IInteraction> _mockValidRequestInteraction;
+        private readonly Mock<IRequestMessage> _mockValidRequest;
 
         private IDictionary<int, IInteraction> _baselineInteractions = new Dictionary<int, IInteraction>();
 
@@ -36,11 +36,10 @@ namespace Servirtium.Core.Tests
 
             _baselineInteractions[1337] = _mockRecordedInteraction.Object;
 
-            _mockValidRequestInteraction = new Mock<IInteraction>();
-            _mockValidRequestInteraction.SetupGet(i => i.Number).Returns(1337);
-            _mockValidRequestInteraction.SetupGet(i => i.Path).Returns("/mock/request/path");
-            _mockValidRequestInteraction.SetupGet(i => i.Method).Returns(HttpMethod.Get);
-            _mockValidRequestInteraction.SetupGet(i => i.RequestHeaders).Returns(new[] { ("header-name", "header-value"), ("another-header-name", "another header-value") });
+            _mockValidRequest = new Mock<IRequestMessage>();
+            _mockValidRequest.SetupGet(i => i.Url).Returns(new Uri("http://some-host.com/mock/request/path"));
+            _mockValidRequest.SetupGet(i => i.Method).Returns(HttpMethod.Get);
+            _mockValidRequest.SetupGet(i => i.Headers).Returns(new[] { ("header-name", "header-value"), ("another-header-name", "another header-value") });
 
         }
 
@@ -51,7 +50,16 @@ namespace Servirtium.Core.Tests
             return replayer;
         }
 
-        private void AddBodyToRequest(Mock<IInteraction> interactionMock)
+        private void AddBodyToRequest(Mock<IRequestMessage> requestMock)
+        {
+            requestMock.Setup(i => i.HasBody).Returns(true);
+            requestMock.Setup(i => i.Body).Returns(Encoding.UTF8.GetBytes("A request body"));
+            requestMock.Setup(i => i.ContentType).Returns(new MediaTypeHeaderValue("text/html"));
+            requestMock.Setup(i => i.Method).Returns(HttpMethod.Post);
+        }
+
+
+        private void AddRequestBodyToInteraction(Mock<IInteraction> interactionMock)
         {
             interactionMock.Setup(i => i.HasRequestBody).Returns(true);
             interactionMock.Setup(i => i.RequestBody).Returns("A request body");
@@ -71,7 +79,7 @@ namespace Servirtium.Core.Tests
         public void GetServiceResponseForRequest_InteractionNumberRequestMethodHeadersAndPathMatchARecordedInteraction_ReturnsServiceResponseBasedOnInteractionResponse()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
             string responseBodyString = BodyAsString(response.Body);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString); 
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode); 
@@ -83,10 +91,10 @@ namespace Servirtium.Core.Tests
         public void GetServiceResponseForRequest_InteractionNumberRequestMethodHeadersPathAndBodyMatchARecordedInteraction_ReturnsServiceResponseBasedOnInteractionResponse()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
-            AddBodyToRequest(_mockRecordedInteraction);
-            AddBodyToRequest(_mockValidRequestInteraction);
+            AddRequestBodyToInteraction(_mockRecordedInteraction);
+            AddBodyToRequest(_mockValidRequest);
 
             string responseBodyString = BodyAsString(response.Body);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
@@ -99,40 +107,39 @@ namespace Servirtium.Core.Tests
         public void GetServiceResponseForRequest_NoRecordedInteractionWithTheSameNumber_Throws()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.Number).Returns(1338);
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1338, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_PathMismatchWithRecordedInteraction_Throws()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.Path).Returns("/other/request/path");
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            _mockValidRequest.Setup(i => i.Url).Returns(new Uri("http://some-host.com/other/request/path"));
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_MethodMismatchWithRecordedInteraction_Throws()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.Method).Returns(HttpMethod.Delete);
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            _mockValidRequest.Setup(i => i.Method).Returns(HttpMethod.Delete);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_HeaderSupersetOfRecordedInteractionRequestHeaders_Throws()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.RequestHeaders).Returns(new[] { ("header-name", "header-value"), ("another-header-name", "another header-value"), ("yet-another-header-name", "yet-another header-value") });
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            _mockValidRequest.Setup(h => h.Headers).Returns(new[] { ("header-name", "header-value"), ("another-header-name", "another header-value"), ("yet-another-header-name", "yet-another header-value") });
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_HeaderSubsetOfRecordedInteractionRequestHeaders_Returns()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.RequestHeaders).Returns(new[] { ("header-name", "header-value")});
-            var response=replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            _mockValidRequest.Setup(r => r.Headers).Returns(new[] { ("header-name", "header-value")});
+            var response=replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
             string responseBodyString = BodyAsString(response.Body);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode);
@@ -144,8 +151,8 @@ namespace Servirtium.Core.Tests
         public void GetServiceResponseForRequest_HeaderSameButDifferentOrderToRecordedInteractionRequestHeaders_Returns()
         {
             var replayer = GenerateReplayer();
-            _mockValidRequestInteraction.Setup(i => i.RequestHeaders).Returns(new[] { ("another-header-name", "another header-value"), ("header-name", "header-value") });
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            _mockValidRequest.Setup(r => r.Headers).Returns(new[] { ("another-header-name", "another header-value"), ("header-name", "header-value") });
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
             string responseBodyString = BodyAsString(response.Body);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
 
@@ -158,48 +165,48 @@ namespace Servirtium.Core.Tests
         public void GetServiceResponseForRequest_RequestHasBodyButRecordedInteractionDoesnt_Throws()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
-            AddBodyToRequest(_mockRecordedInteraction);
+            AddBodyToRequest(_mockValidRequest);
 
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_RequestHasNoBodyButRecordedInteractionDoes_Throws()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
-            AddBodyToRequest(_mockValidRequestInteraction);
+            AddRequestBodyToInteraction(_mockRecordedInteraction);
 
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_RequestBodyMismatch_Throws()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
-            AddBodyToRequest(_mockRecordedInteraction);
-            AddBodyToRequest(_mockValidRequestInteraction);
-            _mockValidRequestInteraction.Setup(i => i.RequestBody).Returns("Another request body.");
+            AddRequestBodyToInteraction(_mockRecordedInteraction);
+            AddBodyToRequest(_mockValidRequest);
+            _mockValidRequest.Setup(r => r.Body).Returns(Encoding.UTF8.GetBytes("Another request body."));
 
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_RequestContentTypeMismatch_Throws()
         {
             var replayer = GenerateReplayer();
-            var response = replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result;
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
-            AddBodyToRequest(_mockRecordedInteraction);
-            AddBodyToRequest(_mockValidRequestInteraction);
-            _mockValidRequestInteraction.Setup(i => i.RequestContentType).Returns(MediaTypeHeaderValue.Parse("text/html; charset=UTF-8"));
+            AddRequestBodyToInteraction(_mockRecordedInteraction);
+            AddBodyToRequest(_mockValidRequest);
+            _mockValidRequest.Setup(r => r.ContentType).Returns(MediaTypeHeaderValue.Parse("text/html; charset=UTF-8"));
 
-            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(new Uri("http://some-host.com/mock/request/path"), _mockValidRequestInteraction.Object).Result);
+            Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
         }
     }
 }

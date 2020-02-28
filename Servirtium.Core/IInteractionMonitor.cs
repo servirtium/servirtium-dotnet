@@ -10,11 +10,10 @@ namespace Servirtium.Core
     {
         void FinishedScript(int interactionNum, bool failed) { }
 
-        Task<IResponseMessage> GetServiceResponseForRequest(Uri host,
-                                                     IInteraction interaction,
+        Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request,
                                                      bool lowerCaseHeaders = false);
 
-        void NoteCompletedInteraction(IInteraction requestInteraction, IResponseMessage responseFromService) { }
+        void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, ICollection<IInteraction.Note> notes) { }
 
         void CodeNoteForNextInteraction(String title, String multiline) { }
 

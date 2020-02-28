@@ -19,7 +19,7 @@ namespace Servirtium.Core.Tests
         private static readonly Uri _redirectHost = new Uri("http://a.mock.service"), _requestHost = new Uri("http://the.servirtuium.service");
 
 
-        private ServiceResponse createServiceResponse() => 
+        private IResponseMessage createServiceResponse() => 
             new ServiceResponse.Builder()
             .Body("The response body", MediaTypeHeaderValue.Parse("text/plain"))
             .StatusCode(HttpStatusCode.OK)
@@ -28,18 +28,20 @@ namespace Servirtium.Core.Tests
 
         private readonly Mock<IScriptWriter> _mockScriptWriter;
         private readonly Mock<IServiceInteroperation> _mockServiceInterop;
-        private readonly Mock<IInteraction> _mockValidRequestInteraction;
+        private readonly Mock<IRequestMessage> _mockValidRequest;
         private readonly Mock<TextWriter> _mockWriter;
 
         IDictionary<int, IInteraction>? _capturedInteractions;
+        IRequestMessage _capturedRequest;
 
         private InteractionRecorder createRecorderToTest()=> new InteractionRecorder(_redirectHost, ()=>_mockWriter.Object, _mockScriptWriter.Object, _mockServiceInterop.Object);
 
         private void AddBodyToRequest() 
         {
-            _mockValidRequestInteraction.Setup(i => i.Method).Returns(HttpMethod.Post);
-            _mockValidRequestInteraction.Setup(i => i.RequestBody).Returns("The request body.");
-            _mockValidRequestInteraction.Setup(i => i.RequestContentType).Returns(MediaTypeHeaderValue.Parse("text/html"));
+            _mockValidRequest.Setup(i => i.Method).Returns(HttpMethod.Post);
+            _mockValidRequest.Setup(i => i.HasBody).Returns(true);
+            _mockValidRequest.Setup(i => i.Body).Returns(Encoding.UTF8.GetBytes("The request body."));
+            _mockValidRequest.Setup(i => i.ContentType).Returns(MediaTypeHeaderValue.Parse("text/html"));
         }
 
         public InteractionRecorderTest()
@@ -47,14 +49,16 @@ namespace Servirtium.Core.Tests
             _mockScriptWriter = new Mock<IScriptWriter>();
             
             _mockServiceInterop = new Mock<IServiceInteroperation>();
-            _mockServiceInterop.Setup(s => s.InvokeServiceEndpoint(It.IsAny<HttpMethod>(), It.IsAny<object?>(), It.IsAny<MediaTypeHeaderValue?>(), It.IsAny<Uri>(), It.IsAny<IEnumerable<(string, string)>>()))
-                .Returns(Task.FromResult(createServiceResponse()));
+            _mockServiceInterop.Setup(s => s.InvokeServiceEndpoint(It.IsAny<IRequestMessage>()))
+                .Returns<IRequestMessage>((rm)=> {
+                    _capturedRequest = rm;
+                    return Task.FromResult(createServiceResponse());
+                    });
 
-            _mockValidRequestInteraction = new Mock<IInteraction>();
-            _mockValidRequestInteraction.Setup(i => i.Number).Returns(1337);
-            _mockValidRequestInteraction.Setup(i => i.Path).Returns("/mock/request/path");
-            _mockValidRequestInteraction.Setup(i => i.Method).Returns(HttpMethod.Get);
-            _mockValidRequestInteraction.Setup(i => i.RequestHeaders).Returns(_requestHeaders);
+            _mockValidRequest = new Mock<IRequestMessage>();
+            _mockValidRequest.Setup(i => i.Url).Returns(new Uri("http://the.servirtuium.service/mock/request/path"));
+            _mockValidRequest.Setup(i => i.Method).Returns(HttpMethod.Get);
+            _mockValidRequest.Setup(i => i.Headers).Returns(_requestHeaders);
 
             
             _mockScriptWriter.Setup(sw => sw.Write(It.IsAny<TextWriter>(), It.IsAny<IDictionary<int, IInteraction>>())).Callback<TextWriter, IDictionary<int, IInteraction>>((tw, interactions) => _capturedInteractions = interactions);
@@ -66,41 +70,40 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void GetServiceResponseForRequest_RequestWithoutBody_CallsInteropWithRequestRedirectedToServiceHost()
         {
-            var response = createRecorderToTest().GetServiceResponseForRequest(_requestHost, _mockValidRequestInteraction.Object).Result;
-            _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(
-                HttpMethod.Get,
-                null,
-                null,
-                new Uri($"{_redirectHost}mock/request/path"),
-                _requestHeaders
-            ));
+            var response = createRecorderToTest().GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
+            _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(It.IsAny<IRequestMessage>()));
+            Assert.False(_capturedRequest.HasBody);
+            Assert.Equal(_mockValidRequest.Object.Headers, _capturedRequest.Headers);
+            Assert.Equal(_mockValidRequest.Object.Method, _capturedRequest.Method);
+            Assert.Equal(new Uri(new Uri("http://a.mock.service"), "/mock/request/path"), _capturedRequest.Url);
         }
 
         [Fact]
         public void GetServiceResponseForRequest_RequestWithBody_CallsInteropWithRequestWithBody()
         {
             AddBodyToRequest();
-            var response = createRecorderToTest().GetServiceResponseForRequest(_requestHost, _mockValidRequestInteraction.Object).Result;
-            _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(
-                HttpMethod.Post,
-                "The request body.",
-                MediaTypeHeaderValue.Parse("text/html"),
-                new Uri($"{_redirectHost}mock/request/path"),
-                _requestHeaders
-            ));
+            var response = createRecorderToTest().GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
+
+            _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(It.IsAny<IRequestMessage>()));
+            Assert.True(_capturedRequest.HasBody);
+            Assert.Equal(_mockValidRequest.Object.ContentType, _capturedRequest.ContentType);
+            Assert.Equal(_mockValidRequest.Object.Body, _capturedRequest.Body);
+            Assert.Equal(_mockValidRequest.Object.Headers, _capturedRequest.Headers);
+            Assert.Equal(_mockValidRequest.Object.Method, _capturedRequest.Method);
+            Assert.Equal(new Uri(new Uri("http://a.mock.service"), "/mock/request/path"), _capturedRequest.Url);
         }
 
         [Fact]
         public void NoteCompletedInteraction_ValidRequestAndResponse_DoesNotThrow()
         {
-            createRecorderToTest().NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            createRecorderToTest().NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
         }
 
         [Fact]
         public void NoteCompletedInteraction_RequestWithBodyAndResponse_DoesNotThrow()
         {
             AddBodyToRequest();
-            createRecorderToTest().NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            createRecorderToTest().NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
         }
 
         [Fact]
@@ -108,12 +111,12 @@ namespace Servirtium.Core.Tests
         {
             AddBodyToRequest();
             var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
-            var dup = new ImmutableInteraction.Builder()
-                .From(_mockValidRequestInteraction.Object)
-                .Path("not/everything/the/same")
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
+            var dup = new ServiceRequest.Builder()
+                .From(_mockValidRequest.Object)
+                .Url(new Uri("http://another.service/not/everything/the/same"))
                 .Build();
-            Assert.ThrowsAny<Exception>(()=> recorder.NoteCompletedInteraction(dup, createServiceResponse()));
+            Assert.ThrowsAny<Exception>(()=> recorder.NoteCompletedInteraction(1337, dup, createServiceResponse(), new IInteraction.Note[0]));
         }
 
         [Fact]
@@ -131,7 +134,7 @@ namespace Servirtium.Core.Tests
         {
             var recorder = createRecorderToTest();
             var serviceResponse = createServiceResponse();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
             recorder.FinishedScript(1, false);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(1, _capturedInteractions!.Count);
@@ -154,7 +157,7 @@ namespace Servirtium.Core.Tests
         public void FinishedScript_FailedTrue_NoEffect()
         {
             var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
             recorder.FinishedScript(1, true);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(1, _capturedInteractions!.Count);
@@ -168,7 +171,7 @@ namespace Servirtium.Core.Tests
             AddBodyToRequest();
             var recorder = createRecorderToTest();
             var serviceResponse = createServiceResponse();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, serviceResponse);
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, serviceResponse, new IInteraction.Note[0]);
             recorder.FinishedScript(1, false);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(1, _capturedInteractions!.Count);
@@ -191,12 +194,11 @@ namespace Servirtium.Core.Tests
         [Fact]
         public void FinishedScript_OneInteractionWithNotes_NotesAreSentToScriptWriterWithInteraction()
         {
-            _mockValidRequestInteraction.Setup(s => s.Notes).Returns(new[] {
+            var recorder = createRecorderToTest();
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new[] {
                 new IInteraction.Note(IInteraction.Note.NoteType.Text, "A Note", "Hello!"),
                 new IInteraction.Note(IInteraction.Note.NoteType.Code, "Some code", "Hello world!")
             });
-            var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
             recorder.FinishedScript(1, false);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(1, _capturedInteractions!.Count);
@@ -218,15 +220,9 @@ namespace Servirtium.Core.Tests
         public void FinishedScript_ThreeInteractionsWithDifferentNumbersNoted_CallsScriptWriterWithThreeInteractionInDictionary()
         {
             var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
-            var second = new ImmutableInteraction.Builder().From(_mockValidRequestInteraction.Object)
-                .Number(666)
-                .Build();
-            recorder.NoteCompletedInteraction(second, createServiceResponse());
-            var third = new ImmutableInteraction.Builder().From(_mockValidRequestInteraction.Object)
-                .Number(42)
-                .Build();
-            recorder.NoteCompletedInteraction(third, createServiceResponse());
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
+            recorder.NoteCompletedInteraction(666, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
+            recorder.NoteCompletedInteraction(42, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
             recorder.FinishedScript(1, true);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(3, _capturedInteractions!.Count);
@@ -240,7 +236,7 @@ namespace Servirtium.Core.Tests
         {
             _mockWriter.Protected().Setup("Dispose", true, It.IsAny<bool>());
             var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
             recorder.FinishedScript(1, false);
             _mockWriter.Protected().Verify("Dispose", Times.Once(), true, true);
         }
@@ -251,7 +247,7 @@ namespace Servirtium.Core.Tests
             _mockWriter.Protected().Setup("Dispose", true, It.IsAny<bool>());
             _mockScriptWriter.Setup(sw => sw.Write(It.IsAny<TextWriter>(), It.IsAny<IDictionary<int, IInteraction>>())).Throws(new Exception("Barf!"));
             var recorder = createRecorderToTest();
-            recorder.NoteCompletedInteraction(_mockValidRequestInteraction.Object, createServiceResponse());
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
             Assert.Throws<Exception>(()=> recorder.FinishedScript(1, false));
             _mockWriter.Protected().Verify("Dispose", Times.Once(), true, true);
         }

@@ -47,11 +47,10 @@ namespace Servirtium.Core.Tests
         {
             new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
                 .Wait();
 
             _mockMessageHandler.Protected()
@@ -65,13 +64,14 @@ namespace Servirtium.Core.Tests
         {
             new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[] {
-                        ("a-request-header", "something"),
-                        ("another-request-header", "something-else") })
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Headers(new (string, string)[] {
+                            ("a-request-header", "something"),
+                            ("another-request-header", "something-else") })
+                        .Build())
+                    
                 .Wait();
 
             _mockMessageHandler.Protected()
@@ -86,13 +86,14 @@ namespace Servirtium.Core.Tests
         {
             new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[] {
-                        ("a-request-header", "something"),
-                        ("a-request-header", "something-else") })
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Headers(new (string, string)[] {
+                            ("a-request-header", "something"),
+                            ("a-request-header", "something-else") })
+                        .Build()
+                    )
                 .Wait();
 
             _mockMessageHandler.Protected()
@@ -108,11 +109,11 @@ namespace Servirtium.Core.Tests
         {
             new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Post,
-                    "SOME REQUEST STUFF",
-                    MediaTypeHeaderValue.Parse("text/css"),
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Post)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Body("SOME REQUEST STUFF", MediaTypeHeaderValue.Parse("text/css"))
+                        .Build())
                 .Wait();
 
             _mockMessageHandler.Protected()
@@ -130,11 +131,10 @@ namespace Servirtium.Core.Tests
         {
             var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
@@ -148,11 +148,10 @@ namespace Servirtium.Core.Tests
             _responseToReturn.Headers.Add("another-response-header", "something-else");
             var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
@@ -171,11 +170,10 @@ namespace Servirtium.Core.Tests
             _responseToReturn.Headers.Add("another-response-header", "also-something-else");
             var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
                 .Result;
             Assert.Equal(4, response.Headers.Count());
             Assert.Contains(("a-response-header", "something"), response.Headers);
@@ -189,11 +187,10 @@ namespace Servirtium.Core.Tests
         {
             var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
                 .InvokeServiceEndpoint(
-                    HttpMethod.Get,
-                    null,
-                    null,
-                    new Uri("http://a.mock.service/endpoint"),
-                    new (string, string)[0])
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
                 .Result;
             Assert.Equal("A RESPONSE", BodyAsString(response.Body!));
             Assert.Single(response.Headers);

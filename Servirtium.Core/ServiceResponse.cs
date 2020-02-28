@@ -47,31 +47,17 @@ namespace Servirtium.Core
 
             public Builder Body(byte[] body, MediaTypeHeaderValue contentType, bool createContentLengthHeader = false)
             {
-                //ToArray() required to evaluate the Select and set 'createContentLengthHeader' to false if a content length is found
-                IEnumerable<(string, string)> headersWithAdjustedContentLength = _headers.Select(h =>
-                {
-                    if (h.Name == "Content-Length" || h.Name == "content-length")
-                    {
-                        createContentLengthHeader = false;
-                        return (h.Name, body.Length.ToString());
-                    }
-                    else return h;
-                }).ToArray();
-                if (createContentLengthHeader)
-                {
-                    headersWithAdjustedContentLength = headersWithAdjustedContentLength.Append(("Content-Length", body.Length.ToString()));
-                }
+                _headers = IHttpMessage.FixContentLengthHeader(_headers, body, createContentLengthHeader);
                 _body = body;
                 _contentType = contentType;
-                _headers = headersWithAdjustedContentLength;
                 return this;
             }
 
             public Builder FixContentLength()
             {
-                if (_body != null && _contentType != null)
-                { 
-                    Body(_body, _contentType);
+                if (_body!=null)
+                {
+                    _headers = IHttpMessage.FixContentLengthHeader(_headers, _body, false);
                 }
                 return this;
             }

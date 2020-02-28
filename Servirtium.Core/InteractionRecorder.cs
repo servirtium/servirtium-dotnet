@@ -14,43 +14,58 @@ namespace Servirtium.Core
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly Func<TextWriter> _writerFactory;
 
-        private readonly IBodyFormatter _requestBodyFormatter = new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter())
-            , _responseBodyFormatter = new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
+        private readonly IBodyFormatter _requestBodyFormatter;
+        private readonly IBodyFormatter _responseBodyFormatter;
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
-            : this(redirectHost, () => File.CreateText(targetFile), scriptWriter, service, interactions)
+            : this(redirectHost, () => File.CreateText(targetFile), scriptWriter, service, interactions, null, null)
         { }
 
-        public InteractionRecorder(Uri redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null)
+        public InteractionRecorder(Uri redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null)
         {
             _redirectHost = redirectHost;
             _service = service;
             _scriptWriter = scriptWriter;
             _allInteractions = interactions ?? new Dictionary<int, IInteraction> { };
             _writerFactory = outputWriterFactory;
+            _requestBodyFormatter = requestBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
+            _responseBodyFormatter = responseBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
         }
 
-        public async Task<IResponseMessage> GetServiceResponseForRequest(Uri host, IInteraction interaction, bool lowerCaseHeaders = false)
+        public async Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request, bool lowerCaseHeaders = false)
         {
             var response = await _service.InvokeServiceEndpoint(
-                interaction.Method, interaction.RequestBody, interaction.RequestContentType,
-                new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{interaction.Path}"),
-                interaction.RequestHeaders);
+                new ServiceRequest.Builder()
+                    .From(request)
+                    .Url(new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{request.Url.PathAndQuery}"))
+                    .Build());
             return response;
         }
 
-        public void NoteCompletedInteraction(IInteraction requestInteraction, IResponseMessage responseFromService) 
+        public void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, ICollection<IInteraction.Note> notes) 
         {
             var builder = new ImmutableInteraction.Builder()
-             .From(requestInteraction)
-             .ResponseHeaders(responseFromService.Headers)
-             .StatusCode(responseFromService.StatusCode);
+                .Number(interactionNumber)
+                .Method(request.Method)
+                .Path(request.Url.PathAndQuery)
+                .RequestHeaders(request.Headers)
+                .ResponseHeaders(responseFromService.Headers)
+                .StatusCode(responseFromService.StatusCode)
+                .Notes(notes);
 
-            if (responseFromService.Body != null && responseFromService.ContentType != null)
+            if (request.HasBody)
             {
-                builder.ResponseBody(_responseBodyFormatter.Write(responseFromService.Body, responseFromService.ContentType), responseFromService.ContentType);
+                builder.RequestBody(_requestBodyFormatter.Write(request.Body!, request.ContentType!), request.ContentType!);
+            }
+            else
+            {
+                builder.RemoveRequestBody();
+            }
+            if (responseFromService.HasBody)
+            {
+                builder.ResponseBody(_responseBodyFormatter.Write(responseFromService.Body!, responseFromService.ContentType!), responseFromService.ContentType!);
             }
             else
             {

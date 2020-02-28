@@ -10,7 +10,7 @@ namespace Servirtium.Core
     {
 
 
-        private readonly string _realServiceHost;
+        private readonly Uri _realServiceHost;
         private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeaderExcludePatterns;
 
 
@@ -19,16 +19,17 @@ namespace Servirtium.Core
 
         public SimpleInteractionTransforms(Uri realServiceHost, IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns)
         {
-            _realServiceHost = realServiceHost.Host;
+            _realServiceHost = new Uri(realServiceHost.GetLeftPart(UriPartial.Authority));
             _requestHeaderExcludePatterns = requestHeaderExcludePatterns;
             _responseHeaderExcludePatterns = responseHeadersExcludePatterns;
         }
 
-        public IInteraction TransformClientRequestForRealService(IInteraction clientRequest)
+        public IRequestMessage TransformClientRequestForRealService(IRequestMessage clientRequest)
         {
-            var builder = new ImmutableInteraction.Builder()
+            var builder = new ServiceRequest.Builder()
                 .From(clientRequest)
-                .RequestHeaders(clientRequest.RequestHeaders
+                .Url(new Uri(_realServiceHost, clientRequest.Url.PathAndQuery))
+                .Headers(clientRequest.Headers
                     //Remove unwanted headers from client request
                     .Where(h => !_requestHeaderExcludePatterns.Any(pattern=>pattern.IsMatch($"{h.Item1}: {h.Item2}")))
                     //Fix host header
@@ -37,7 +38,7 @@ namespace Servirtium.Core
                         (string name, string value) = h;
                         if (name.ToLower() == "host")
                         {
-                            return (name, _realServiceHost);
+                            return (name, _realServiceHost.Host);
                         }
                         else return h;
                     })

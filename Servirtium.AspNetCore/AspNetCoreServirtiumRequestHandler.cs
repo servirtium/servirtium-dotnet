@@ -39,33 +39,35 @@ namespace Servirtium.AspNetCore
         internal async Task HandleRequest(
             Uri targetHost, string pathAndQuery, string method, IHeaderDictionary requestHeaders, string? requestContentType, Stream? requestBodyStream, Action<HttpStatusCode> statusCodeSetter, IHeaderDictionary responseHeaders, Stream responseBodyStream, ICollection<IInteraction.Note> notes)
         {
-            var requestBuilder = new ImmutableInteraction.Builder()
-                .Number(_interactionCounter.Bump())
+            int interactionNumber = _interactionCounter.Bump();
+            var requestBuilder = new ServiceRequest.Builder()
                 .Method(new HttpMethod(method))
-                .Path(pathAndQuery)
+                .Url(new Uri(targetHost, pathAndQuery))
                 //Remap headers from a dictionary of string lists to a list of (string, string) tuples
-                .RequestHeaders
+                .Headers
                 (
                     requestHeaders
                         .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
                         .ToArray()
-                )
-                .Notes(notes);
+                );
 
 
-            if (!String.IsNullOrWhiteSpace(requestContentType)&& requestBodyStream!=null)
+            if (!String.IsNullOrWhiteSpace(requestContentType) && requestBodyStream!=null)
             {
-                var bodyString = await new StreamReader(requestBodyStream).ReadToEndAsync();
-                requestBuilder.RequestBody(bodyString, MediaTypeHeaderValue.Parse(requestContentType));
+                using (var ms = new MemoryStream())
+                {
+                    await requestBodyStream.CopyToAsync(ms);
+                    requestBuilder.Body(ms.ToArray(), MediaTypeHeaderValue.Parse(requestContentType));
+                }
             }
-            var requestInteraction = requestBuilder.Build();
-            var serviceRequestInteraction = _interactionTransforms.TransformClientRequestForRealService(requestInteraction);
+            var request = requestBuilder.Build();
+            var serviceRequest = _interactionTransforms.TransformClientRequestForRealService(request);
             var responseFromService = await _monitor.GetServiceResponseForRequest(
-                targetHost,
-                serviceRequestInteraction,
+                interactionNumber,
+                serviceRequest,
                 false);
             var clientResponse = _interactionTransforms.TransformRealServiceResponseForClient(responseFromService);
-            _monitor.NoteCompletedInteraction(serviceRequestInteraction, clientResponse);
+            _monitor.NoteCompletedInteraction(interactionNumber, serviceRequest, clientResponse, notes);
             //Always remove the 'Transfer-Encoding: chunked' header if present.
             //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
             //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.

@@ -7,7 +7,7 @@ namespace Servirtium.Core
     public interface IInteractionTransforms
     {
 
-        IInteraction TransformClientRequestForRealService(IInteraction clientRequest) => clientRequest;
+        IRequestMessage TransformClientRequestForRealService(IRequestMessage clientRequest) => clientRequest;
 
         IResponseMessage TransformRealServiceResponseForClient(IResponseMessage serviceResponse) => serviceResponse;
 

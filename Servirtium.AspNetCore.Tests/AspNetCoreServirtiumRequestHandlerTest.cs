@@ -28,7 +28,7 @@ namespace Servirtium.AspNetCore.Tests
 
         private readonly Mock<Action<HttpStatusCode>> _mockStatusCodeSetter;
 
-        private IInteraction _interactionToTransform;
+        private IRequestMessage _requestToTransform;
 
         private readonly ICollection<IInteraction.Note> _notes = new IInteraction.Note[0];
 
@@ -40,7 +40,7 @@ namespace Servirtium.AspNetCore.Tests
         public AspNetCoreServirtiumRequestHandlerTest()
         {
             _mockMonitor = new Mock<IInteractionMonitor>();
-            _mockMonitor.Setup(m => m.GetServiceResponseForRequest(It.IsAny<Uri>(), It.IsAny<IInteraction>(), It.IsAny<bool>()))
+            _mockMonitor.Setup(m => m.GetServiceResponseForRequest(It.IsAny<int>(), It.IsAny<IRequestMessage>(), It.IsAny<bool>()))
                 .Returns(Task.FromResult(_responseWithNoHeaders));
 
             _mockTransform = new Mock<IInteractionTransforms>();
@@ -52,12 +52,12 @@ namespace Servirtium.AspNetCore.Tests
             _mockResponseHeaders = new Mock<IHeaderDictionary>();
             _mockResponseHeaders.Setup(rh => rh.GetEnumerator()).Returns(_mockResponseHeaderEnumerator.Object);
 
-            _mockTransform.Setup(t => t.TransformClientRequestForRealService(It.IsAny<IInteraction>())).Returns<IInteraction>((i) =>
+            _mockTransform.Setup(t => t.TransformClientRequestForRealService(It.IsAny<IRequestMessage>())).Returns<IRequestMessage>((r) =>
             {
-                _interactionToTransform = i;
-                return i;
+                _requestToTransform = r;
+                return r;
             });
-            _mockTransform.Setup(t => t.TransformRealServiceResponseForClient(It.IsAny<ServiceResponse>())).Returns<ServiceResponse>((sr) => sr);
+            _mockTransform.Setup(t => t.TransformRealServiceResponseForClient(It.IsAny<IResponseMessage>())).Returns<IResponseMessage>((sr) => sr);
 
             _mockRequestBody = new Mock<Stream>();
             _mockResponseBody = new Mock<Stream>();
@@ -74,11 +74,11 @@ namespace Servirtium.AspNetCore.Tests
         public void HandleRequest_RequestWithNoBodyOrHeaders_TransformsInteractionBuiltFromInputs()
         {
             HandleNoBodyRequest(new AspNetCoreServirtiumRequestHandler(_mockMonitor.Object, _mockTransform.Object, new InteractionCounter()));
-            _mockTransform.Verify(t => t.TransformClientRequestForRealService(It.IsAny<IInteraction>()));
-            Assert.Equal(HttpMethod.Get, _interactionToTransform.Method);
-            Assert.Equal("endpoint", _interactionToTransform.Path);
-            Assert.Empty(_interactionToTransform.RequestHeaders);
-            Assert.False(_interactionToTransform.HasRequestBody); 
+            _mockTransform.Verify(t => t.TransformClientRequestForRealService(It.IsAny<IRequestMessage>()));
+            Assert.Equal(HttpMethod.Get, _requestToTransform.Method);
+            Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToTransform.Url);
+            Assert.Empty(_requestToTransform.Headers);
+            Assert.False(_requestToTransform.HasBody); 
         }
     }
 }

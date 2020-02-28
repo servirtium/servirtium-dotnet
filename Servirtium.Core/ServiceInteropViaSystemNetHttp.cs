@@ -19,15 +19,15 @@ namespace Servirtium.Core
             _httpClient = httpClient;
         }
 
-        public async Task<ServiceResponse> InvokeServiceEndpoint(HttpMethod method, object? clientRequestBody, MediaTypeHeaderValue? clientRequestContentType, Uri url, IEnumerable<(string, string)> clientRequestHeaders)
+        public async Task<IResponseMessage> InvokeServiceEndpoint(IRequestMessage requestMessage)
         {
-            var request = new HttpRequestMessage(method, url);
-            if (clientRequestBody!=null && clientRequestContentType !=null)
+            var request = new HttpRequestMessage(requestMessage.Method, requestMessage.Url);
+            if (requestMessage.HasBody)
             {
-                request.Content = new StringContent(clientRequestBody.ToString());
-                request.Content.Headers.ContentType = clientRequestContentType;
+                request.Content = new ByteArrayContent(requestMessage.Body);
+                request.Content.Headers.ContentType = requestMessage.ContentType;
             }
-            foreach((string name, string value) in clientRequestHeaders)
+            foreach((string name, string value) in requestMessage.Headers)
             {
                 var lowerCaseName = name.ToLower();
                 if (lowerCaseName != "content-type")
@@ -42,7 +42,15 @@ namespace Servirtium.Core
                     }
                 }
             }
-            var response = await _httpClient.SendAsync(request);
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.SendAsync(request);
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
             var body = await response.Content.ReadAsByteArrayAsync();
             return new ServiceResponse.Builder()
                 .Body(body, response.Content.Headers.ContentType)
