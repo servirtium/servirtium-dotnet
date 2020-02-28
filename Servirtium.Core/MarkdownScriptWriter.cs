@@ -11,7 +11,7 @@ namespace Servirtium.Core
     {
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
-            int finalInteractionNumber = interactions.Keys.Max();
+            int finalInteractionNumber = interactions.Keys.Any() ? interactions.Keys.Max() : -1;
 
             for (var i = 0; i <= finalInteractionNumber; i++)
             {
