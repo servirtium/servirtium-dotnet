@@ -17,7 +17,7 @@ namespace Servirtium.Core
         //Parses markdown for a single interaction and captures the content into named capture groups
         private static readonly Regex INTERACTION_REGEX = new Regex(
             @"(?xm)
-              \#\#\s+Interaction\s+(?<number>[0-9]+):\s+(?<method>[A-Za-z]+)\s+(?<path>[^\n\r]+)                                        # Interaction title                 ## Interaction 0: POST /my-api/rest/v1/stuff
+              \#\#\s+Interaction\s+(?<number>[0-9]+):\s+(?:\*|_)?(?<method>[A-Za-z]+)(?:\*|_)?\s+(?<path>[^\n\r]+)                       # Interaction title                 ## Interaction 0: POST /my-api/rest/v1/stuff
               [\r\n]+                                                                                                                   # (captures 'method' and 'path')
               (?:                                                                                                                       # Overall capture for each note section. 'noteTitle' and 'noteContent' named groups can capture multiple values
               \#\#\s\[Note\]\s(?<noteTitle>[^\n\r]+)?:                                                                                  # Match the heading and extract the title

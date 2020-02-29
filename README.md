@@ -75,15 +75,13 @@ From the solution directory:
 
 Currently working through the new implementation guide: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
 
-All steps up to and including 6 are completed.
+All steps up to and including 8 are completed.
 
 ## Roadmap
 
 Current roadmap in priority order:
 
-* Complete steps 8 and 10 of the implementation guide.
-
-* Add support for binary request & response bodies.
+* Complete steps 9, 10 and 11 of the implementation guide.
 
 * Add injectable logging support using the `Microsoft.Extensions.Logging`.
 

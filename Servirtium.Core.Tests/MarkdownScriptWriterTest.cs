@@ -15,7 +15,7 @@ namespace Servirtium.Core.Tests
         public SampleFileLoader() 
         { 
             foreach(var sample in new[] { 
-                "single_get.md", "single_post.md","single_put.md", "single_delete.md", "single_error.md", "single_error_nobody.md", "conversation.md", "outofsequence_conversation_validate.md", "single_get_note.md", "single_get_codenote.md", "single_get_notes.md"})
+                "single_get.md", "single_post.md","single_put.md", "single_delete.md", "single_error.md", "single_error_nobody.md", "conversation.md", "outofsequence_conversation_validate.md", "single_get_note.md", "single_get_codenote.md", "single_get_notes.md", "single_get_italichttpmethod.md"})
             {
                 scripts[sample] =  File.ReadAllText($"markdown_conversations{Path.DirectorySeparatorChar}{sample}");
             }
@@ -44,11 +44,11 @@ namespace Servirtium.Core.Tests
                     ("Transfer-Encoding", "chunked")
                 };
 
-        private void CompareSampleMarkdown(string scriptName, IDictionary<int, IInteraction> interactions)
+        private void CompareSampleMarkdown(string scriptName, IDictionary<int, IInteraction> interactions, MarkdownScriptWriter.Settings? settings = null)
         {
             var sampleText = _loader.scripts[scriptName];
             var interactionText = new StringBuilder();
-            new MarkdownScriptWriter().Write(new StringWriter(interactionText), interactions);
+            new MarkdownScriptWriter(settings).Write(new StringWriter(interactionText), interactions);
             Assert.Equal(sampleText.Replace("\n", Environment.NewLine), interactionText.ToString());
         }
 
@@ -323,6 +323,22 @@ to be
 noting.") } )
                 .Build();
             CompareSampleMarkdown("single_get_notes.md", interactions);
+        }
+
+        [Fact]
+        public void Write_EmphasiseHttpVerbsSet_ItalicisesHttpMethod()
+        {
+            var interactions = new Dictionary<int, IInteraction>();
+            interactions[0] = new ImmutableInteraction.Builder()
+                .Number(0)
+                .Path("/a/mock/service")
+                .Method(HttpMethod.Get)
+                .RequestHeaders(_baselineMockRequestHeaders)
+                .StatusCode(HttpStatusCode.OK)
+                .ResponseHeaders(_baselineMockResponseHeaders)
+                .ResponseBody("SIMPLE GET RESPONSE", MediaTypeHeaderValue.Parse("text/plain"))
+                .Build();
+            CompareSampleMarkdown("single_get_italichttpmethod.md", interactions, new MarkdownScriptWriter.Settings { EmphasiseHttpVerbs = true });
         }
     }
 }

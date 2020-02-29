@@ -35,10 +35,12 @@ namespace Servirtium.Core.Tests
         }
 
 
-        [Fact]
-        public void Read_SingleGetRequest_ReturnsSingleInteraction()
+        [Theory]
+        [InlineData("single_get.md")]
+        [InlineData("single_get_italichttpmethod.md")]
+        public void Read_SingleGetRequest_ReturnsSingleInteraction(string sampleFile)
         {
-            var interactions = ReadSampleMarkdown("single_get.md");
+            var interactions = ReadSampleMarkdown(sampleFile);
             Assert.Equal(1, interactions.Count);
             var interaction = interactions[0];
 

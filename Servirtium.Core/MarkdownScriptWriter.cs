@@ -9,6 +9,23 @@ namespace Servirtium.Core
 {
     public class MarkdownScriptWriter : IScriptWriter
     {
+        public enum CodeblockDemarcation
+        {
+            TripleBacktick,
+            FourSpaceIndent
+        }
+        public class Settings {
+            public CodeblockDemarcation CodeblockDemarcation = CodeblockDemarcation.TripleBacktick;
+            public bool EmphasiseHttpVerbs  = false;
+        }
+
+        private readonly Settings _settings;
+
+        public MarkdownScriptWriter(Settings? settings = null)
+        {
+            this._settings = settings ?? new Settings();
+        }
+
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
             int finalInteractionNumber = interactions.Keys.Any() ? interactions.Keys.Max() : -1;
@@ -30,8 +47,8 @@ namespace Servirtium.Core
 
 ";
                     }));
-
-                    var markdown = $@"## Interaction {interaction.Number}: {interaction.Method} {interaction.Path}
+                    var httpMethodMarkdown = _settings.EmphasiseHttpVerbs ? $"*{interaction.Method}*" : interaction.Method.ToString();
+                    var markdown = $@"## Interaction {interaction.Number}: {httpMethodMarkdown} {interaction.Path}
 
 {noteMarkdown}### Request headers recorded for playback:
 
