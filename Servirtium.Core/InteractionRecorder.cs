@@ -44,7 +44,7 @@ namespace Servirtium.Core
             return response;
         }
 
-        public void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, ICollection<IInteraction.Note> notes) 
+        public void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, IEnumerable<IInteraction.Note> notes) 
         {
             var builder = new ImmutableInteraction.Builder()
                 .Number(interactionNumber)
@@ -77,7 +77,6 @@ namespace Servirtium.Core
 
         public void FinishedScript(int interactionNum, bool failed)
         {
-
             using (var fs = _writerFactory())
             {
                 _scriptWriter.Write(fs, _allInteractions);

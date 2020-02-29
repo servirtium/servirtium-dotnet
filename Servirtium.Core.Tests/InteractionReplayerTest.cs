@@ -19,6 +19,15 @@ namespace Servirtium.Core.Tests
         private IDictionary<int, IInteraction> _baselineInteractions = new Dictionary<int, IInteraction>();
 
         private static string BodyAsString(byte[]? body) => Encoding.UTF8.GetString(body!);
+
+        private static Mock<IBodyFormatter> MockCustomBodyFormatter(){
+            var formatterMock = new Mock<IBodyFormatter>();
+            formatterMock.Setup(f => f.Write(It.IsAny<byte[]>(), It.IsAny<MediaTypeHeaderValue>()))
+                .Returns("CUSTOM FORMATTED BODY");
+            formatterMock.Setup(f => f.Read(It.IsAny<string>(), It.IsAny<MediaTypeHeaderValue>()))
+                .Returns(Encoding.UTF8.GetBytes("CUSTOM FORMATTED BODY"));
+            return formatterMock;
+        }
         public InteractionReplayerTest() 
         {
             _mockScriptReader = new Mock<IScriptReader>();
@@ -43,9 +52,10 @@ namespace Servirtium.Core.Tests
 
         }
 
-        private InteractionReplayer GenerateReplayer()
+        private InteractionReplayer GenerateReplayer(IBodyFormatter? requestBodyFormatter = null, IBodyFormatter?
+            responseBodyFormatter = null)
         {
-            var replayer = new InteractionReplayer(_mockScriptReader.Object);
+            var replayer = new InteractionReplayer(_mockScriptReader.Object, null, responseBodyFormatter, requestBodyFormatter);
             replayer.ReadPlaybackConversation(new StringReader("some script content"));
             return replayer;
         }
@@ -101,6 +111,15 @@ namespace Servirtium.Core.Tests
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseContentType!.ToString(), response.ContentType!.ToString());
             Assert.Equal(_mockRecordedInteraction.Object.ResponseHeaders.ToString(), response.Headers.ToString());
+        }
+
+        [Fact]
+        public void GetServiceResponseForRequest_ResponseHasBody_ReturnsServiceResponseWithBodyReadByBodyFormatter()
+        {
+            var replayer = GenerateReplayer(null, MockCustomBodyFormatter().Object);
+            var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
+
+            Assert.Equal("CUSTOM FORMATTED BODY", Encoding.UTF8.GetString(response.Body!));
         }
 
         [Fact]
@@ -194,6 +213,17 @@ namespace Servirtium.Core.Tests
             _mockValidRequest.Setup(r => r.Body).Returns(Encoding.UTF8.GetBytes("Another request body."));
 
             Assert.ThrowsAny<Exception>(() => replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result);
+        }
+
+        [Fact]
+        public void GetServiceResponseForRequest_RequestBodyFormattedByFormatterMatchesRecordedInteractionRequestBody_DoesNotThrow()
+        {
+            var replayer = GenerateReplayer(MockCustomBodyFormatter().Object);
+
+            AddRequestBodyToInteraction(_mockRecordedInteraction);
+            _mockRecordedInteraction.Setup(i => i.RequestBody).Returns("CUSTOM FORMATTED BODY");
+            AddBodyToRequest(_mockValidRequest);
+            replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Wait();
         }
 
         [Fact]

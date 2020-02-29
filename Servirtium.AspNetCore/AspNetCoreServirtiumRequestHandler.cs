@@ -21,35 +21,37 @@ namespace Servirtium.AspNetCore
 {
     public class AspNetCoreServirtiumRequestHandler
     {
-        private readonly IInteractionMonitor _monitor;
-        private readonly IInteractionTransforms _interactionTransforms;
-        private readonly InteractionCounter _interactionCounter;
+        private readonly IServirtiumRequestHandler _internalHandler;
 
         internal AspNetCoreServirtiumRequestHandler(
-            IInteractionMonitor monitor,
-            IInteractionTransforms interactionTransforms,
-            InteractionCounter interactionCounter
+            IServirtiumRequestHandler internalHandler
             )
         {
-            _monitor = monitor;
-            _interactionTransforms = interactionTransforms;
-            _interactionCounter = interactionCounter;
+            _internalHandler = internalHandler;
         }
 
         internal async Task HandleRequest(
-            Uri targetHost, string pathAndQuery, string method, IHeaderDictionary requestHeaders, string? requestContentType, Stream? requestBodyStream, Action<HttpStatusCode> statusCodeSetter, IHeaderDictionary responseHeaders, Stream responseBodyStream, ICollection<IInteraction.Note> notes)
+            Uri targetHost, 
+            string pathAndQuery, 
+            string method, 
+            IHeaderDictionary requestHeaders, 
+            string? requestContentType, 
+            Stream? requestBodyStream, 
+            Action<HttpStatusCode> statusCodeSetter, 
+            IHeaderDictionary responseHeaders, 
+            Stream responseBodyStream,
+            Action<string?> responseContentTypeSetter,
+            IEnumerable<IInteraction.Note> notes)
         {
-            int interactionNumber = _interactionCounter.Bump();
+            var headers = requestHeaders
+                        .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
+                        .ToArray();
+
             var requestBuilder = new ServiceRequest.Builder()
                 .Method(new HttpMethod(method))
                 .Url(new Uri(targetHost, pathAndQuery))
                 //Remap headers from a dictionary of string lists to a list of (string, string) tuples
-                .Headers
-                (
-                    requestHeaders
-                        .SelectMany(kvp => kvp.Value.Select(val => (kvp.Key, val)))
-                        .ToArray()
-                );
+                .Headers(headers);
 
 
             if (!String.IsNullOrWhiteSpace(requestContentType) && requestBodyStream!=null)
@@ -61,13 +63,9 @@ namespace Servirtium.AspNetCore
                 }
             }
             var request = requestBuilder.Build();
-            var serviceRequest = _interactionTransforms.TransformClientRequestForRealService(request);
-            var responseFromService = await _monitor.GetServiceResponseForRequest(
-                interactionNumber,
-                serviceRequest,
-                false);
-            var clientResponse = _interactionTransforms.TransformRealServiceResponseForClient(responseFromService);
-            _monitor.NoteCompletedInteraction(interactionNumber, serviceRequest, clientResponse, notes);
+
+            var clientResponse = await _internalHandler.ProcessRequest(request, notes);
+
             //Always remove the 'Transfer-Encoding: chunked' header if present.
             //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself
             //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.
@@ -78,8 +76,6 @@ namespace Servirtium.AspNetCore
                          .Where((h) => !(h.Name.ToLower() == "transfer-encoding" && h.Value.ToLower() == "chunked")))
                  .FixContentLength()
                  .Build();
-
-
             statusCodeSetter(clientResponse.StatusCode);
 
             //Transfer adjusted headers to the response going out to the client
@@ -94,9 +90,10 @@ namespace Servirtium.AspNetCore
                     responseHeaders[headerName] = new StringValues(headerValue);
                 }
             }
-            if (clientResponse.Body != null)
+            if (clientResponse.HasBody)
             {
-                await responseBodyStream.WriteAsync(clientResponse.Body, 0, clientResponse.Body.Length);
+                responseContentTypeSetter(clientResponse.ContentType!.MediaType);
+                await responseBodyStream.WriteAsync(clientResponse.Body!, 0, clientResponse.Body!.Length);
             }
         }
     }

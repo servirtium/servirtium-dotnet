@@ -154,6 +154,41 @@ namespace Servirtium.Core.Tests
         }
 
         [Fact]
+        public void FinishedScript_OneInteractionNoted_WritesResponseBodyProducedWithInjectedResponseBodyFormatter()
+        {
+            Mock<IBodyFormatter> mockBodyFormatter = new Mock<IBodyFormatter>();
+            mockBodyFormatter.Setup(f => f.Write(It.IsAny<byte[]>(), It.IsAny<MediaTypeHeaderValue>())).Returns("FORMATTED RESPONSE BODY");
+            var recorder = new InteractionRecorder(_redirectHost, () => _mockWriter.Object, _mockScriptWriter.Object, _mockServiceInterop.Object, null, mockBodyFormatter.Object);
+
+            var serviceResponse = createServiceResponse();
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
+            recorder.FinishedScript(1, false);
+            mockBodyFormatter.Verify(f => f.Write(
+                It.Is<byte[]>(b=>Encoding.UTF8.GetString(b)=="The response body"), 
+                MediaTypeHeaderValue.Parse("text/plain")));
+            var recorded = _capturedInteractions![1337];
+            Assert.Equal("FORMATTED RESPONSE BODY", recorded.ResponseBody);
+        }
+
+        [Fact]
+        public void FinishedScript_OneInteractionNotedWithRequestBody_WritesRequestBodyProducedWithInjectedRequestBodyFormatter()
+        {
+            Mock<IBodyFormatter> mockBodyFormatter = new Mock<IBodyFormatter>();
+            mockBodyFormatter.Setup(f => f.Write(It.IsAny<byte[]>(), It.IsAny<MediaTypeHeaderValue>())).Returns("FORMATTED REQUEST BODY");
+            var recorder = new InteractionRecorder(_redirectHost, () => _mockWriter.Object, _mockScriptWriter.Object, _mockServiceInterop.Object, null, null, mockBodyFormatter.Object);
+            var serviceResponse = createServiceResponse();
+
+            AddBodyToRequest();           
+            recorder.NoteCompletedInteraction(1337, _mockValidRequest.Object, createServiceResponse(), new IInteraction.Note[0]);
+            recorder.FinishedScript(1, false);
+            mockBodyFormatter.Verify(f => f.Write(
+                It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == "The request body."),
+                MediaTypeHeaderValue.Parse("text/html")));
+            var recorded = _capturedInteractions![1337];
+            Assert.Equal("FORMATTED REQUEST BODY", recorded.RequestBody);
+        }
+
+        [Fact]
         public void FinishedScript_FailedTrue_NoEffect()
         {
             var recorder = createRecorderToTest();

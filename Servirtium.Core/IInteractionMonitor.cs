@@ -13,7 +13,7 @@ namespace Servirtium.Core
         Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request,
                                                      bool lowerCaseHeaders = false);
 
-        void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, ICollection<IInteraction.Note> notes) { }
+        void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, IEnumerable<IInteraction.Note> notes) { }
 
         void CodeNoteForNextInteraction(String title, String multiline) { }
 

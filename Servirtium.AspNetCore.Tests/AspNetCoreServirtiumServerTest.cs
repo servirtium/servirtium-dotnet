@@ -26,8 +26,7 @@ namespace Servirtium.AspNetCore.Tests
         {
             new AspNetCoreServirtiumServer(
                 _mockBuilder.Object, 
-                new Mock<IInteractionMonitor>().Object, 
-                new Mock<IInteractionTransforms>().Object,
+                new Mock<IServirtiumRequestHandler>().Object,
                 null
             );
             _mockBuilder.Verify(b => b.Build());

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 [assembly: InternalsVisibleTo("Servirtium.Core.Tests")]
@@ -13,17 +13,21 @@ namespace Servirtium.Core
 
         Task Stop();
 
-        void FinishedScript();
+        void FinishedScript()
+        {
+            InternalRequestHandler.FinishedScript();
+        }
 
         void MakeNote(string title, string note);
 
         void MakeCodeNote(string title, string note);
+
+        protected IServirtiumRequestHandler InternalRequestHandler { get; }
     }
 
     public class StubServirtiumServer : IServirtiumServer
     {
-        public void FinishedScript()
-        { }
+        IServirtiumRequestHandler IServirtiumServer.InternalRequestHandler => throw new NotImplementedException();
 
         public void MakeCodeNote(string title, string note)
         {
@@ -38,5 +42,6 @@ namespace Servirtium.Core
         public Task<IServirtiumServer> Start() => Task.FromResult<IServirtiumServer>(this);
 
         public Task Stop() => Task.CompletedTask;
+
     }
 }
