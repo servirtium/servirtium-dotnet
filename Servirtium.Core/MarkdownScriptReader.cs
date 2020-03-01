@@ -14,9 +14,18 @@ namespace Servirtium.Core
     {
         public static readonly string SERVIRTIUM_INTERACTION = "## Interaction ";
 
+        private static string GetCodeBlockPattern(string captureName) =>
+            $@"(?:
+            (?:```(?:\r\n|\n|\r)(?<{captureName}>[\w\W]*?)(?:\r\n|\n|\r)```)|
+            (?:(\s\s\s\s(?<{captureName}>[\w\W]*?(?:\r\n|\n|\r)))+)
+)";
+        private static string CodeBlockContents(CaptureCollection codeBlockLines) => String.Join("", codeBlockLines).TrimEnd('\r', '\n');
+
+        private static readonly Regex _indentedCodeBlockNewLine = new Regex(@"((?:\r\n)|\n|\r)    ", RegexOptions.Compiled);
+
         //Parses markdown for a single interaction and captures the content into named capture groups
         private static readonly Regex INTERACTION_REGEX = new Regex(
-            @"(?xm)
+            $@"(?xm)
               \#\#\s+Interaction\s+(?<number>[0-9]+):\s+(?:\*|_)?(?<method>[A-Za-z]+)(?:\*|_)?\s+(?<path>[^\n\r]+)                       # Interaction title                 ## Interaction 0: POST /my-api/rest/v1/stuff
               [\r\n]+                                                                                                                   # (captures 'method' and 'path')
               (?:                                                                                                                       # Overall capture for each note section. 'noteTitle' and 'noteContent' named groups can capture multiple values
@@ -28,7 +37,7 @@ namespace Servirtium.Core
               )*
               \#\#\#\s+Request\s+headers\s+recorded\s+for\s+playback:                                                                   # Request Header Title              ### Request headers recorded for playback: 
               [\r\n]+                                                                                                                   #
-              ```(?:\r\n|\n|\r)(?<requestHeaders>[\w\W]*?)(?:\r\n|\n|\r)```                                                             # Request Headers                   ```
+              {GetCodeBlockPattern("requestHeaders")}                                                                                   # Request Headers                   ```
                                                                                                                                         # (captures 'requestHeaders')       Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2
                                                                                                                                         #                                   User-Agent: Servirtium-Testing
                                                                                                                                         #                                   Connection: keep-alive
@@ -37,13 +46,13 @@ namespace Servirtium.Core
               [\r\n]+                                                                                                                   #
               \#\#\#\s+Request\s+body\s+recorded\s+for\s+playback\s+\((?<requestContentType>[^\n\r]+)?\):                               # Request Body Title                ### Request body recorded for playback (text/plain):
               [\r\n]+                                                                                                                   # (captures 'requestContentType')
-              ```(?:\r\n|\n|\r)(?<requestBody>[\w\W]*?)(?:\r\n|\n|\r)```                                                                # Request Body                      ```
+              {GetCodeBlockPattern("requestBody")}                                                                                      # Request Body                      ```
                                                                                                                                         # (captures 'requestBody')          request body contents
                                                                                                                                         #                                   ```
               [\r\n]+
               \#\#\#\s+Response\s+headers\s+recorded\s+for\s+playback:                                                                    #Response Header Title              ### Response headers recorded for playback:
               [\r\n]+
-              ```(?:\r\n|\n|\r)(?<responseHeaders>[\w\W]*?)(?:\r\n|\n|\r)```                                                            # Response Headers                  ```
+              {GetCodeBlockPattern("responseHeaders")}                                                                                  # Response Headers                  ```
                                                                                                                                         # (captures 'responseHeaders')      Content-Type: application/json
                                                                                                                                         #                                   Connection: keep-alive
                                                                                                                                         #                                   Transfer-Encoding: chunked
@@ -52,7 +61,7 @@ namespace Servirtium.Core
               \#\#\#\s+Response\s+body\s+recorded\s+for\s+playback\s+\((?<statusCode>[0-9]+):\s+(?<responseContentType>[^\n\r]+)?\):    # Response Body Title               ### Response body recorded for playback (200: application/json):
               [\r\n]+                                                                                                                   # (captures 'statusCode' 
                                                                                                                                         # and 'responseContentType')
-              ```(?:\r\n|\n|\r)(?<responseBody>[\w\W]*?)(?:\r\n|\n|\r)```                                                               # Response Body                     ```
+              {GetCodeBlockPattern("responseBody")}                                                                                     # Response Body                     ```
                                                                                                                                         # (captures 'responseBody')         response body contents
                                                                                                                                         #                                   ```
             "
@@ -102,12 +111,17 @@ namespace Servirtium.Core
                                 if (content.StartsWith("```\n") && content.EndsWith("\n```"))
                                 {
                                     contentType = IInteraction.Note.NoteType.Code;
-                                    content = content.Substring(4, content.Length - 8);
+                                    content = content[4..^4];
                                 }
                                 else if (content.StartsWith("```\r\n") && content.EndsWith("\r\n```"))
                                 {
                                     contentType = IInteraction.Note.NoteType.Code;
-                                    content = content.Substring(5, content.Length - 10);
+                                    content = content[5..^5];
+                                }
+                                else if (content.StartsWith("    "))
+                                {
+                                    contentType = IInteraction.Note.NoteType.Code;
+                                    content = _indentedCodeBlockNewLine.Replace(content[4..], "$1");
                                 }
                                 return new IInteraction.Note(contentType, c.Value, content);
                             })
@@ -117,17 +131,17 @@ namespace Servirtium.Core
                             .Notes(notes)
                             .Method(new HttpMethod(match.Groups["method"].Value))
                             .Path(match.Groups["path"].Value)
-                            .RequestHeaders(HeaderTextToHeaderList(match.Groups["requestHeaders"].Value))
-                            .ResponseHeaders(HeaderTextToHeaderList(match.Groups["responseHeaders"].Value))
+                            .RequestHeaders(HeaderTextToHeaderList(CodeBlockContents(match.Groups["requestHeaders"].Captures)))
+                            .ResponseHeaders(HeaderTextToHeaderList(CodeBlockContents(match.Groups["responseHeaders"].Captures)))
                             .StatusCode(Enum.Parse<HttpStatusCode>(match.Groups["statusCode"].Value));
 
-                        var requestBody = match.Groups["requestBody"].Value;
+                        var requestBody = CodeBlockContents(match.Groups["requestBody"].Captures);
                         if (match.Groups["requestContentType"].Success && requestBody.Any())
                         {
                             builder.RequestBody(requestBody, MediaTypeHeaderValue.Parse(match.Groups["requestContentType"].Value));
                         }
 
-                        var responseBody = match.Groups["responseBody"].Value;
+                        var responseBody = CodeBlockContents(match.Groups["responseBody"].Captures);
                         if (match.Groups["responseContentType"].Success && responseBody.Any())
                         {
                             builder.ResponseBody(responseBody, MediaTypeHeaderValue.Parse(match.Groups["responseContentType"].Value));
@@ -139,6 +153,11 @@ namespace Servirtium.Core
 
 
             return allInteractions;
+        }
+
+        private IEnumerable<(string, string)> HeaderTextToHeaderList(object select)
+        {
+            throw new NotImplementedException();
         }
     }
 }

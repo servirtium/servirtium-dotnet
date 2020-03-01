@@ -37,6 +37,12 @@
     <None Update="markdown_conversations\conversation.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="markdown_conversations\single_get_notes_indentedcodeblocks.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="markdown_conversations\single_post_indentedcodeblocks.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="markdown_conversations\single_get_italichttpmethod.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -59,10 +59,13 @@ namespace Servirtium.Core.Tests
             Assert.Equal("SIMPLE GET RESPONSE", interaction.ResponseBody);
         }
 
-        [Fact]
-        public void Read_SinglePostRequest_ReturnsSingleInteraction()
+
+        [Theory]
+        [InlineData("single_post.md")]
+        [InlineData("single_post_indentedcodeblocks.md")]
+        public void Read_SinglePostRequest_ReturnsSingleInteraction(string sampleFile)
         {
-            var interactions = ReadSampleMarkdown("single_post.md");
+            var interactions = ReadSampleMarkdown(sampleFile);
             Assert.Equal(1, interactions.Count);
             var interaction = interactions[0];
             Assert.Equal(0, interaction.Number);
@@ -231,10 +234,13 @@ to be
 running.".Replace("\r\n", "\n"), note.Content);
         }
 
-        [Fact]
-        public void Read_MultipleNotes_ReturnsInteractionWithCodeNote()
+
+        [Theory]
+        [InlineData("single_get_notes.md")]
+        [InlineData("single_get_notes_indentedcodeblocks.md")]
+        public void Read_MultipleNotes_ReturnsInteractionWithCodeNote(string sampleFile)
         {
-            var interactions = ReadSampleMarkdown("single_get_notes.md");
+            var interactions = ReadSampleMarkdown(sampleFile);
             Assert.Equal(1, interactions.Count);
             var interaction = interactions[0];
 

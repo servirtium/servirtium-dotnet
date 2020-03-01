@@ -15,7 +15,8 @@ namespace Servirtium.Core.Tests
         public SampleFileLoader() 
         { 
             foreach(var sample in new[] { 
-                "single_get.md", "single_post.md","single_put.md", "single_delete.md", "single_error.md", "single_error_nobody.md", "conversation.md", "outofsequence_conversation_validate.md", "single_get_note.md", "single_get_codenote.md", "single_get_notes.md", "single_get_italichttpmethod.md"})
+                "single_get.md", "single_post.md","single_put.md", "single_delete.md", "single_error.md", "single_error_nobody.md", "conversation.md", "outofsequence_conversation_validate.md", 
+                "single_get_note.md", "single_get_codenote.md", "single_get_notes.md", "single_get_italichttpmethod.md", "single_post_indentedcodeblocks.md", "single_get_notes_indentedcodeblocks.md"})
             {
                 scripts[sample] =  File.ReadAllText($"markdown_conversations{Path.DirectorySeparatorChar}{sample}");
             }
@@ -339,6 +340,52 @@ noting.") } )
                 .ResponseBody("SIMPLE GET RESPONSE", MediaTypeHeaderValue.Parse("text/plain"))
                 .Build();
             CompareSampleMarkdown("single_get_italichttpmethod.md", interactions, new MarkdownScriptWriter.Settings { EmphasiseHttpVerbs = true });
+        }
+
+        [Fact]
+        public void Write_IndentedCodeBlocksSet_DemarcatesCodesWirthIndentation()
+        {
+            var interactions = new Dictionary<int, IInteraction>();
+            interactions[0] = new ImmutableInteraction.Builder()
+                .Number(0)
+                .Path("/a/mock/service")
+                .Method(HttpMethod.Post)
+                .RequestHeaders(_baselineMockRequestHeaders)
+                .RequestBody("{\"some\":\"json\"}", MediaTypeHeaderValue.Parse("application/json"))
+                .StatusCode(HttpStatusCode.OK)
+                .ResponseHeaders(_baselineMockResponseHeaders)
+                .ResponseBody("SIMPLE POST RESPONSE", MediaTypeHeaderValue.Parse("text/plain"))
+                .Build();
+            CompareSampleMarkdown("single_post_indentedcodeblocks.md", interactions, new MarkdownScriptWriter.Settings { CodeblockDemarcation = MarkdownScriptWriter.CodeblockDemarcation.FourSpaceIndent });
+        }
+
+
+        [Fact]
+        public void Write_RequestWithTextNotesAndIndentedCodeBlocksSet_IndentsCodeNotes()
+        {
+            var interactions = new Dictionary<int, IInteraction>();
+            interactions[0] = new ImmutableInteraction.Builder()
+                .Number(0)
+                .Path("/a/mock/service")
+                .Method(HttpMethod.Get)
+                .RequestHeaders(_baselineMockRequestHeaders)
+                .StatusCode(HttpStatusCode.OK)
+                .ResponseHeaders(_baselineMockResponseHeaders)
+                .ResponseBody("SIMPLE GET RESPONSE", MediaTypeHeaderValue.Parse("text/plain"))
+                .Notes(new[] { new IInteraction.Note(IInteraction.Note.NoteType.Text, "A Note", @"Lots of
+noteworthy things
+to be
+noting."),
+                    new IInteraction.Note(IInteraction.Note.NoteType.Code, "A Code Note", @"Lots of
+noteworthy code
+to be
+running."),
+                    new IInteraction.Note(IInteraction.Note.NoteType.Text, "Another Note", @"Even more
+noteworthy things
+to be
+noting.") })
+                .Build();
+            CompareSampleMarkdown("single_get_notes_indentedcodeblocks.md", interactions, new MarkdownScriptWriter.Settings { CodeblockDemarcation = MarkdownScriptWriter.CodeblockDemarcation.FourSpaceIndent });
         }
     }
 }
