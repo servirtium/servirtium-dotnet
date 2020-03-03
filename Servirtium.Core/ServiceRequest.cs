@@ -79,6 +79,7 @@ namespace Servirtium.Core
                 _contentType = message.ContentType;
                 _headers = message.Headers;
                 _method = message.Method;
+                _url = message.Url;
                 return this;
             }
 

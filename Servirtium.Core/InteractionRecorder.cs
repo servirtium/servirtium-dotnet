@@ -10,12 +10,14 @@ namespace Servirtium.Core
     {
         private readonly IServiceInteroperation _service;
         private readonly IScriptWriter _scriptWriter;
-        private readonly Uri _redirectHost;
+        private readonly Uri? _redirectHost;
         private readonly IDictionary<int, IInteraction> _allInteractions;
         private readonly Func<TextWriter> _writerFactory;
 
         private readonly IBodyFormatter _requestBodyFormatter;
         private readonly IBodyFormatter _responseBodyFormatter;
+        
+        public InteractionRecorder(string targetFile, IScriptWriter scriptWriter, bool bypassProxy = false) : this(null, () => File.CreateText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(bypassProxy)) { }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter) : this(redirectHost, targetFile, scriptWriter, new ServiceInteropViaSystemNetHttp()) { }
 
@@ -23,7 +25,7 @@ namespace Servirtium.Core
             : this(redirectHost, () => File.CreateText(targetFile), scriptWriter, service, interactions, null, null)
         { }
 
-        public InteractionRecorder(Uri redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null)
+        public InteractionRecorder(Uri? redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null)
         {
             _redirectHost = redirectHost;
             _service = service;
@@ -36,12 +38,15 @@ namespace Servirtium.Core
 
         public async Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request, bool lowerCaseHeaders = false)
         {
-            var response = await _service.InvokeServiceEndpoint(
-                new ServiceRequest.Builder()
-                    .From(request)
-                    .Url(new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{request.Url.PathAndQuery}"))
-                    .Build());
-            return response;
+            var requestBuilder = new ServiceRequest.Builder()
+                .From(request);
+            
+            if (_redirectHost!=null)
+            {
+                requestBuilder.Url(
+                    new Uri($"{_redirectHost.GetLeftPart(UriPartial.Authority)}{request.Url.PathAndQuery}"));
+            }
+            return await _service.InvokeServiceEndpoint(requestBuilder.Build());
         }
 
         public void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, IEnumerable<IInteraction.Note> notes) 

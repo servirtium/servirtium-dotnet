@@ -12,7 +12,7 @@ namespace Servirtium.Core
     {
         private readonly HttpClient _httpClient;
 
-        public ServiceInteropViaSystemNetHttp(): this(new HttpClient()) { }
+        public ServiceInteropViaSystemNetHttp(bool bypassProxy = false): this(new HttpClient(new HttpClientHandler{ UseProxy = !bypassProxy})) { }
 
         public ServiceInteropViaSystemNetHttp(HttpClient httpClient)
         {
