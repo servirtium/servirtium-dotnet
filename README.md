@@ -68,20 +68,16 @@ From the solution directory:
 
 ### Published NuGet assemblies
 
-* [Servirtium.Core/0.0.1-dev.4](https://www.nuget.org/packages/Servirtium.Core/0.0.1-dev.4)
-* [Servirtium.AspNetCore/0.0.1-dev.4](https://www.nuget.org/packages/Servirtium.AspNetCore/0.0.1-dev.4)
+* [Servirtium.Core/0.3.0](https://www.nuget.org/packages/Servirtium.Core/0.3.0)
+* [Servirtium.AspNetCore/0.3.0](https://www.nuget.org/packages/Servirtium.AspNetCore/0.3.0)
 
 ## Current Status
 
-Currently working through the new implementation guide: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
-
-All steps up to and including 8 are completed.
+The Servirtium implementation guide is complete and all features are implemented: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
 
 ## Roadmap
 
 Current roadmap in priority order:
-
-* Complete steps 9, 10 and 11 of the implementation guide.
 
 * Add injectable logging support using the `Microsoft.Extensions.Logging`.
 
