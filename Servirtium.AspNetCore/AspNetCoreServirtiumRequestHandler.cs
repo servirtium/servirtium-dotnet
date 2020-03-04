@@ -6,15 +6,12 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using Servirtium.Core;
-
+using Servirtium.Core.Http;
+using Servirtium.Core.Interactions;
 
 [assembly: InternalsVisibleTo("Servirtium.AspNetCore.Tests")]
 namespace Servirtium.AspNetCore

@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using Servirtium.Core;
-
+using Servirtium.Core.Http;
+using Servirtium.Core.Interactions;
 
 [assembly: InternalsVisibleTo("Servirtium.AspNetCore.Tests")]
 namespace Servirtium.AspNetCore
@@ -26,11 +27,11 @@ namespace Servirtium.AspNetCore
 
         private readonly ICollection<IInteraction.Note> _notesForNextInteraction = new LinkedList<IInteraction.Note>();
       
-        public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
+        public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), port);
         public static AspNetCoreServirtiumServer Default(int port, IInteractionMonitor monitor, Uri serviceHost) =>
-            WithTransforms(port, monitor, new SimpleInteractionTransforms(serviceHost));
-        public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IInteractionTransforms interactionTransforms) =>
+            WithTransforms(port, monitor, new SimpleHttpMessageTransforms(serviceHost));
+        public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms) =>
             new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), null);
 
         //private static readonly 

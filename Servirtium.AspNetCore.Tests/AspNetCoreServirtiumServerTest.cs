@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using Servirtium.Core;
+using Servirtium.Core.Http;
 using System;
 using Xunit;
 

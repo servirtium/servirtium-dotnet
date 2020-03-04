@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Primitives;
 using Moq;
 using Servirtium.Core;
+using Servirtium.Core.Http;
+using Servirtium.Core.Interactions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
