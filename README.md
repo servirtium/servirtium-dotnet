@@ -4,9 +4,11 @@
 
 ## Examples
 
-Recording:
+### Recording HTTP interactions to Servirtium Markdown
 
 ```csharp
+            // for your SetUp method in NUnit ...
+
             var recorder = new MarkdownRecorder(
                 ClimateApi.DEFAULT_SITE, $@"test_recordings\{script}",
                 new FindAndReplaceScriptWriter(new[] {
@@ -26,13 +28,19 @@ Recording:
                 ));
 
             server.start();
+            
             //Some tests to record interactions using Servirtium on host 'localhost:1234'
+            // TODO
+
+            // for your TearDown method in NUnit ...
             server.stop();
 ```
 
-Replaying:
+### Replaying HTTP interactions from Servirtium Markdown
 
 ```csharp
+            // for your SetUp method in NUnit ...
+
             var replayer = new MarkdownReplayer();
             replayer.LoadScriptFile($@"test_recordings\{script}");
 
@@ -46,7 +54,11 @@ Replaying:
                 )),
 
             server.start();
-            //Some tests to use the recorded interactions hosted on 'localhost:1234'
+            
+            //Some tests to record interactions using Servirtium on host 'localhost:1234'
+            // TODO
+
+            // for your TearDown method in NUnit ...
             server.stop();
 ```
 
