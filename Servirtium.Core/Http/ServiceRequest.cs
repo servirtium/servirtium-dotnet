@@ -29,6 +29,15 @@ namespace Servirtium.Core.Http
 
         public class Builder
         {
+            public Builder():this(IHttpMessage.FixContentLengthHeader) { }
+
+            //For testing
+            internal Builder(Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> fixContentLengthHeader)
+            {
+                _fixContentLengthHeader = fixContentLengthHeader;
+            }
+
+            private readonly Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> _fixContentLengthHeader;
             private Uri _url = new Uri("http://localhost");
             private IEnumerable<(string Name, string Value)> _headers = new (string Name, string Value)[0];
             private byte[]? _body;
@@ -58,7 +67,7 @@ namespace Servirtium.Core.Http
 
             public Builder Body(byte[] body, MediaTypeHeaderValue contentType, bool createContentLengthHeader = false)
             {
-                _headers = IHttpMessage.FixContentLengthHeader(_headers, body, createContentLengthHeader);
+                _headers = _fixContentLengthHeader(_headers, body, createContentLengthHeader);
                 _body = body;
                 _contentType = contentType;
                 return this;
@@ -68,7 +77,7 @@ namespace Servirtium.Core.Http
             {
                 if (_body != null)
                 {
-                    _headers = IHttpMessage.FixContentLengthHeader(_headers, _body, false);
+                    _headers = _fixContentLengthHeader(_headers, _body, false);
                 }
                 return this;
             }

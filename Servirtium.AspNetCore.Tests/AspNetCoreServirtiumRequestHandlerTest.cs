@@ -34,7 +34,7 @@ namespace Servirtium.AspNetCore.Tests
 
         private MockHeaders _sentResponseHeaders = new MockHeaders();
 
-        private readonly Mock<IEnumerator<KeyValuePair<string, StringValues>>> _mockRequestHeaderEnumerator, _mockResponseHeaderEnumerator;
+        private readonly Mock<IEnumerator<KeyValuePair<string, StringValues>>> _mockRequestHeaderEnumerator;
 
         private readonly MemoryStream _responseBody = new MemoryStream();
 
@@ -44,8 +44,7 @@ namespace Servirtium.AspNetCore.Tests
 
         private readonly Mock<Action<string>> _mockResponseContentTypeSetter;
 
-
-        private IRequestMessage _requestToProcess;
+        private IRequestMessage? _requestToProcess;
 
         private readonly ICollection<IInteraction.Note> _notes = new IInteraction.Note[0];
 
@@ -113,7 +112,7 @@ namespace Servirtium.AspNetCore.Tests
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToProcess.Url);
             Assert.Empty(_requestToProcess.Headers);
             Assert.True(_requestToProcess.HasBody);
-            Assert.Equal("A REQUEST BODY", Encoding.UTF8.GetString(_requestToProcess.Body));
+            Assert.Equal("A REQUEST BODY", Encoding.UTF8.GetString(_requestToProcess.Body!));
         }
 
         [Fact]
@@ -164,13 +163,11 @@ namespace Servirtium.AspNetCore.Tests
         [Fact]
         public void HandleRequest_ResponseReturnedHasBodyButNoContentType_SendsNoBodyOrContentType()
         {
-            _response = new ServiceResponse.Builder()
-               .StatusCode(HttpStatusCode.FailedDependency)
-               .Body(new byte[0], null)
-               .Build();
-
+            var mockResponse = new Mock<IResponseMessage>();
+            mockResponse.Setup(r => r.Body).Returns(new byte[0]);
+            mockResponse.Setup(r => r.ContentType).Returns(()=>null);
+            _response = mockResponse.Object;
             HandleNoBodyRequest(RequestHandler());
-            _mockStatusCodeSetter.Verify(scs => scs(HttpStatusCode.FailedDependency));
             Assert.Equal(0, _responseBody.Length);
             _mockResponseContentTypeSetter.Verify(rcts => rcts(It.IsAny<string>()), Times.Never());
         }

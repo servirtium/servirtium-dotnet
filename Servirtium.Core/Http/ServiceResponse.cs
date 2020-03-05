@@ -29,6 +29,15 @@ namespace Servirtium.Core.Http
             private byte[]? _body;
             private MediaTypeHeaderValue? _contentType;
             private HttpStatusCode _statusCode = HttpStatusCode.OK;
+            private readonly Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> _fixContentLengthHeader;
+            public Builder() : this(IHttpMessage.FixContentLengthHeader) { }
+
+            //For testing
+            internal Builder(Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> fixContentLengthHeader)
+            {
+                _fixContentLengthHeader = fixContentLengthHeader;
+            }
+
 
             public Builder Headers(IEnumerable<(string, string)> headers)
             {
@@ -47,7 +56,7 @@ namespace Servirtium.Core.Http
 
             public Builder Body(byte[] body, MediaTypeHeaderValue contentType, bool createContentLengthHeader = false)
             {
-                _headers = IHttpMessage.FixContentLengthHeader(_headers, body, createContentLengthHeader);
+                _headers = _fixContentLengthHeader(_headers, body, createContentLengthHeader);
                 _body = body;
                 _contentType = contentType;
                 return this;
@@ -57,7 +66,7 @@ namespace Servirtium.Core.Http
             {
                 if (_body!=null)
                 {
-                    _headers = IHttpMessage.FixContentLengthHeader(_headers, _body, false);
+                    _headers = _fixContentLengthHeader(_headers, _body, false);
                 }
                 return this;
             }

@@ -37,7 +37,7 @@ namespace Servirtium.AspNetCore
             Action<HttpStatusCode> statusCodeSetter, 
             IHeaderDictionary responseHeaders, 
             Stream responseBodyStream,
-            Action<string?> responseContentTypeSetter,
+            Action<string> responseContentTypeSetter,
             IEnumerable<IInteraction.Note> notes)
         {
             var headers = requestHeaders
@@ -68,11 +68,11 @@ namespace Servirtium.AspNetCore
             //However if you just send it with no content-length, Kestrel will add the chunked header and chunk the body for you.
             clientResponse = new ServiceResponse.Builder()
                 .From(clientResponse)
-                 .Headers(
+                .Headers(
                      clientResponse.Headers
                          .Where((h) => !(h.Name.ToLower() == "transfer-encoding" && h.Value.ToLower() == "chunked")))
-                 .FixContentLength()
-                 .Build();
+                .FixContentLength()
+                .Build();
             statusCodeSetter(clientResponse.StatusCode);
 
             //Transfer adjusted headers to the response going out to the client

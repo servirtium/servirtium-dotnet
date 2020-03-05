@@ -12,11 +12,11 @@ namespace Servirtium.Core.Http
 
     public interface IHttpMessage
     {
-        public static IEnumerable<(string Name, string Value)> FixContentLengthHeader(IEnumerable<(string Name, string Value)> currentHeaders, byte[] body, bool createContentLengthHeader)
+        internal static IEnumerable<(string Name, string Value)> FixContentLengthHeader(IEnumerable<(string Name, string Value)> currentHeaders, byte[] body, bool createContentLengthHeader)
         {
             IEnumerable<(string, string)> headersWithAdjustedContentLength = currentHeaders.Select(h =>
             {
-                if (h.Name == "Content-Length" || h.Name == "content-length")
+                if (h.Name.ToLower() == "content-length")
                 {
                     createContentLengthHeader = false;
                     return (h.Name, body.Length.ToString());

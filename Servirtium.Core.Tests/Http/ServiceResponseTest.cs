@@ -1,3 +1,4 @@
+using Moq;
 using Servirtium.Core.Http;
 using System;
 using System.Collections.Generic;
@@ -18,20 +19,15 @@ namespace Servirtium.Core.Tests.Http
             ("second", "original"),
             ("third", "headers")
         };
+
         private static ServiceResponse BaselineResponse() => new ServiceResponse.Builder()
             .Body("The body.", TEST_MEDIA_TYPE)
             .StatusCode(HttpStatusCode.Ambiguous)
-            .Headers(new[] {
-                ("first", "the"),
-                ("second", "original"),
-                ("third", "headers")
-            })
+            .Headers(generateTestHeaders())
             .Build();
 
 
         private static string BodyAsString(byte[]? body)=> Encoding.UTF8.GetString(body!);
-
-        private static byte[] StringAsBody(string body) => Encoding.UTF8.GetBytes(body);
 
 
         [Fact]
@@ -56,7 +52,7 @@ namespace Servirtium.Core.Tests.Http
         }
 
         [Fact]
-        public void Body_ValidBodyAndNoContentLengthHeader_ReturnsServiceResponseWithNewBodyAndOtherPropertiesTheSame()
+        public void Body_ValidBody_ReturnsServiceResponseWithNewBodyAndOtherPropertiesTheSame()
         {
             var revised = new ServiceResponse.Builder()
                 .From(BaselineResponse())
@@ -69,78 +65,76 @@ namespace Servirtium.Core.Tests.Http
         }
 
         [Fact]
-        public void WithRevisedBody_ValidBodyAndCapitalisedContentLengthHeader_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
+        public void Body_ValidBinaryBody_ReturnsServiceResponseWithNewBodyAndOtherPropertiesTheSame()
         {
             var revised = new ServiceResponse.Builder()
                 .From(BaselineResponse())
-                .Headers(new[]{
+                .Body(Encoding.UTF8.GetBytes("The new body."), MediaTypeHeaderValue.Parse("text/plain"))
+                .Build();
+            Assert.Equal("The new body.", BodyAsString(revised.Body));
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), revised.ContentType);
+            Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
+            Assert.Equal(generateTestHeaders(), revised.Headers);
+        }
+
+        [Fact]
+        public void Body_HasHeaders_FixesContentLengthHeaders()
+        {
+            var originalHeaders = new[]{
                     ("first", "the"),
                     ("second", "original"),
                     ("Content-Length", "A gazillion"),
-                    ("third", "headers")})
+                    ("third", "headers")};
+            var fixedHeaders = new[] { ("fixed", "headers") };
+            var mockHeaderFixer =
+                new Mock<Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>>>();
+
+            mockHeaderFixer.Setup(hf => hf(It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<byte[]>(), It.IsAny<bool>()))
+                .Returns(fixedHeaders);
+
+            var revised = new ServiceResponse.Builder(mockHeaderFixer.Object)
+                .From(BaselineResponse())
+                .Headers(originalHeaders)
                 .Body("The new body.", TEST_MEDIA_TYPE)
                 .Build();
-            Assert.Equal("The new body.", BodyAsString(revised.Body));
-            Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
-            Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
-            Assert.Equal(
-                new []{
-                    ("first", "the"),
-                    ("second", "original"),
-                    ("Content-Length", "The new body.".Length.ToString()),
-                    ("third", "headers")}
-                , revised.Headers);
+            mockHeaderFixer.Verify(hf => hf(originalHeaders, It.Is<byte[]>(b=>Encoding.UTF8.GetString(b)=="The new body."), false));
+            Assert.Equal(fixedHeaders, revised.Headers);
         }
 
         [Fact]
-        public void WithRevisedBody_ValidBodyAndLowercaseContentLengthHeader_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
+        public void Body_CreateContentLengthHeaderFlagSet_PassesFlagToHeaderFixFunc()
         {
-            var revised = new ServiceResponse.Builder()
+            var originalHeaders = new[]{
+                    ("first", "the"),
+                    ("second", "original"),
+                    ("Content-Length", "A gazillion"),
+                    ("third", "headers")};
+            var fixedHeaders = new[] { ("fixed", "headers") };
+            var mockHeaderFixer =
+                new Mock<Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>>>();
+
+            mockHeaderFixer.Setup(hf => hf(It.IsAny<IEnumerable<(string, string)>>(), It.IsAny<byte[]>(), It.IsAny<bool>()))
+                .Returns(fixedHeaders);
+
+            var revised = new ServiceResponse.Builder(mockHeaderFixer.Object)
                 .From(BaselineResponse())
-                .Headers(new[]{ 
-                    ("first", "the"),
-                    ("second", "original"),
-                    ("content-length", "A gazillion"),
-                    ("third", "headers")
-                })
-                .Body("The new body.", TEST_MEDIA_TYPE)
+                .Headers(originalHeaders)
+                .Body("The new body.", TEST_MEDIA_TYPE, true)
                 .Build();
-            Assert.Equal("The new body.", BodyAsString(revised.Body));
-            Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
-            Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
-            Assert.Equal(
-                new[]{
-                    ("first", "the"),
-                    ("second", "original"),
-                    ("content-length", "The new body.".Length.ToString()),
-                    ("third", "headers")}
-                , revised.Headers);
+            mockHeaderFixer.Verify(hf => hf(originalHeaders, It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == "The new body."), true));
         }
 
-        [Fact]
-        public void WithRevisedBody_ValidBodyAndContentLengthHeaderWithNonStandardCasing_ReturnsServiceResponseWithNewBodyAndContentLengthSetToBodyLength()
-        {
 
+        [Fact]
+        public void From_FullyPopulatedResposse_CorrectlyCopiesAllProperties()
+        {
+            var original = BaselineResponse();
             var revised = new ServiceResponse.Builder()
-                .From(BaselineResponse())
-                .Headers(new[]{
-                    ("first", "the"),
-                    ("second", "original"),
-                    ("CONTENT-LENGTH", "A gazillion"),
-                    ("third", "headers")
-                })
-                .Body("The new body.", TEST_MEDIA_TYPE)
+                .From(original)
                 .Build();
-            Assert.Equal("The new body.", BodyAsString(revised.Body));
-            Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
-            Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
-            Assert.Equal(
-                new[]{
-                    ("first", "the"),
-                    ("second", "original"),
-                    ("CONTENT-LENGTH", "A gazillion"),
-                    ("third", "headers")}
-                , revised.Headers);
+            Assert.Equal(original.StatusCode, revised.StatusCode);
+            Assert.Equal(original.Body, revised.Body);
+            Assert.Equal(original.Headers, revised.Headers);
         }
     }
 }
