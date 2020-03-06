@@ -9,7 +9,7 @@ using static Servirtium.Core.Http.SimpleHttpMessageTransforms;
 
 namespace Servirtium.Core.Tests.Http
 {
-    public class SimpleInteractionTransformsTest
+    public class SimpleHttpMessageTransformsTest
     {
 
         private static readonly Uri REAL_SERVICE_URI = new Uri("http://real-service.com");
@@ -29,7 +29,19 @@ namespace Servirtium.Core.Tests.Http
         [Fact]
         public void TransformClientRequestForRealService_NoRequestHeadersToRemoveAndNoHostRequestHeader_ReturnsUnchangedClone()
         {
-            var transformed =new SimpleHttpMessageTransforms(REAL_SERVICE_URI)
+            var transformed =new SimpleHttpMessageTransforms(new Regex[0], new Regex[0])
+                .TransformClientRequestForRealService(_baseRequest);
+            Assert.Equal(new Uri("http://servirtium-service.com/down/the/garden"), transformed.Url);
+            Assert.Equal(_baseRequest.Headers, transformed.Headers);
+            Assert.Null(transformed.ContentType);
+            Assert.Null(transformed.Body);
+            Assert.Equal(_baseRequest.Headers, transformed.Headers.ToArray());
+        }
+
+        [Fact]
+        public void TransformClientRequestForRealService_NoRequestHeadersToRemoveNoHostRequestHeaderAndServiceHostSet_ChangesUrlHost()
+        {
+            var transformed = new SimpleHttpMessageTransforms(REAL_SERVICE_URI)
                 .TransformClientRequestForRealService(_baseRequest);
             Assert.Equal(new Uri("http://real-service.com/down/the/garden"), transformed.Url);
             Assert.Equal(_baseRequest.Headers, transformed.Headers);
@@ -99,7 +111,18 @@ namespace Servirtium.Core.Tests.Http
         }
 
         [Fact]
-        public void TransformClientRequestForRealService_HostHeaderInRequest_ReplacesHostHeaderValueWithRealServiceHost()
+        public void TransformClientRequestForRealService_HostHeaderInRequestAndServiceHostSpecified_ReplacesHostHeaderValueWithRealServiceHost()
+        {
+            var interaction = new ServiceRequest.Builder()
+                .From(_baseRequest)
+                .Headers(new[] { ("Host", SERVIRTIUM_SERVICE_URI.Host) })
+                .Build();
+            var transformed = new SimpleHttpMessageTransforms(REAL_SERVICE_URI).TransformClientRequestForRealService(interaction);
+            Assert.Equal(("Host", REAL_SERVICE_URI.Host), transformed.Headers.First());
+        }
+
+        [Fact]
+        public void TransformClientRequestForRealService_HostHeaderInRequestAndNoServiceHostSpecified_LeavesHostHeaderValueTheSame()
         {
             var interaction = new ServiceRequest.Builder()
                 .From(_baseRequest)
