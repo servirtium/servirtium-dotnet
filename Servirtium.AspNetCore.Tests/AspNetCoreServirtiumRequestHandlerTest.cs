@@ -100,7 +100,7 @@ namespace Servirtium.AspNetCore.Tests
             Assert.Equal(HttpMethod.Get, _requestToProcess!.Method);
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToProcess.Url);
             Assert.Empty(_requestToProcess.Headers);
-            Assert.False(_requestToProcess.HasBody);
+            Assert.False(_requestToProcess.Body.HasValue);
         }
 
         [Fact]
@@ -111,8 +111,8 @@ namespace Servirtium.AspNetCore.Tests
             Assert.Equal(HttpMethod.Post, _requestToProcess!.Method);
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToProcess.Url);
             Assert.Empty(_requestToProcess.Headers);
-            Assert.True(_requestToProcess.HasBody);
-            Assert.Equal("A REQUEST BODY", Encoding.UTF8.GetString(_requestToProcess.Body!));
+            Assert.True(_requestToProcess.Body.HasValue);
+            Assert.Equal("A REQUEST BODY", Encoding.UTF8.GetString(_requestToProcess.Body!.Value.Content!));
         }
 
         [Fact]
@@ -156,18 +156,6 @@ namespace Servirtium.AspNetCore.Tests
 
             HandleNoBodyRequest(RequestHandler());
             _mockStatusCodeSetter.Verify(scs => scs(HttpStatusCode.FailedDependency));
-            Assert.Equal(0, _responseBody.Length);
-            _mockResponseContentTypeSetter.Verify(rcts => rcts(It.IsAny<string>()), Times.Never());
-        }
-
-        [Fact]
-        public void HandleRequest_ResponseReturnedHasBodyButNoContentType_SendsNoBodyOrContentType()
-        {
-            var mockResponse = new Mock<IResponseMessage>();
-            mockResponse.Setup(r => r.Body).Returns(new byte[0]);
-            mockResponse.Setup(r => r.ContentType).Returns(()=>null);
-            _response = mockResponse.Object;
-            HandleNoBodyRequest(RequestHandler());
             Assert.Equal(0, _responseBody.Length);
             _mockResponseContentTypeSetter.Verify(rcts => rcts(It.IsAny<string>()), Times.Never());
         }

@@ -138,8 +138,9 @@ namespace Servirtium.Core.Tests.Http
                         .Build())
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
-            Assert.Equal("A RESPONSE", BodyAsString(response.Body));
+            var (content, type) = response.Body!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), type);
+            Assert.Equal("A RESPONSE", BodyAsString(content));
         }
 
         [Fact]
@@ -155,8 +156,9 @@ namespace Servirtium.Core.Tests.Http
                         .Build())
                 .Result;
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), response.ContentType);
-            Assert.Equal("A RESPONSE", BodyAsString(response.Body!));
+            var (content, type) = response.Body!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("application/pdf"), type);
+            Assert.Equal("A RESPONSE", BodyAsString(content));
             Assert.Equal(3, response.Headers.Count());
             Assert.Contains(("a-response-header", "something"), response.Headers);
             Assert.Contains(("another-response-header", "something-else"), response.Headers);
@@ -193,7 +195,7 @@ namespace Servirtium.Core.Tests.Http
                         .Url(new Uri("http://a.mock.service/endpoint"))
                         .Build())
                 .Result;
-            Assert.Equal("A RESPONSE", BodyAsString(response.Body!));
+            Assert.Equal("A RESPONSE", BodyAsString(response.Body!.Value.Content));
             Assert.Single(response.Headers);
             Assert.Contains(("Content-Length", "A RESPONSE".Length.ToString()), response.Headers);
         }

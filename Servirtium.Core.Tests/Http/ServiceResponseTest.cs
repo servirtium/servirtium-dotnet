@@ -41,8 +41,9 @@ namespace Servirtium.Core.Tests.Http
                     ("third", "headers")
                 })
                 .Build();
-            Assert.Equal("The body.", BodyAsString(revised.Body));
-            Assert.Equal(TEST_MEDIA_TYPE, revised.ContentType);
+            var (content, type) = revised.Body!.Value;
+            Assert.Equal("The body.", BodyAsString(content));
+            Assert.Equal(TEST_MEDIA_TYPE, type);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(new[] {
                     ("first", "some"),
@@ -58,8 +59,9 @@ namespace Servirtium.Core.Tests.Http
                 .From(BaselineResponse())
                 .Body("The new body.", MediaTypeHeaderValue.Parse("text/plain"))
                 .Build();
-            Assert.Equal("The new body.", BodyAsString(revised.Body));
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), revised.ContentType);
+            var (content, type) = revised.Body!.Value;
+            Assert.Equal("The new body.", BodyAsString(content));
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), type);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(generateTestHeaders(), revised.Headers);
         }
@@ -71,8 +73,9 @@ namespace Servirtium.Core.Tests.Http
                 .From(BaselineResponse())
                 .Body(Encoding.UTF8.GetBytes("The new body."), MediaTypeHeaderValue.Parse("text/plain"))
                 .Build();
-            Assert.Equal("The new body.", BodyAsString(revised.Body));
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), revised.ContentType);
+            var (content, type) = revised.Body!.Value;
+            Assert.Equal("The new body.", BodyAsString(content));
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), type);
             Assert.Equal(HttpStatusCode.Ambiguous, revised.StatusCode);
             Assert.Equal(generateTestHeaders(), revised.Headers);
         }

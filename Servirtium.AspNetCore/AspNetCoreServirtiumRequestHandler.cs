@@ -87,10 +87,10 @@ namespace Servirtium.AspNetCore
                     responseHeaders[headerName] = new StringValues(headerValue);
                 }
             }
-            if (clientResponse.HasBody)
+            if (clientResponse.Body.HasValue)
             {
-                responseContentTypeSetter(clientResponse.ContentType!.MediaType);
-                await responseBodyStream.WriteAsync(clientResponse.Body!, 0, clientResponse.Body!.Length);
+                responseContentTypeSetter(clientResponse.Body.Value.Type.MediaType);
+                await responseBodyStream.WriteAsync(clientResponse.Body.Value.Content, 0, clientResponse.Body.Value.Content.Length);
             }
         }
     }

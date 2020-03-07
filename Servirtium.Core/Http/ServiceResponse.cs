@@ -11,23 +11,20 @@ namespace Servirtium.Core.Http
     public class ServiceResponse : IResponseMessage
     {
         public IEnumerable<(string Name, string Value)> Headers { get; }
-        public byte[]? Body { get; }
-        public MediaTypeHeaderValue? ContentType { get; }
+        public (byte[] Content, MediaTypeHeaderValue Type)? Body { get; }
         public HttpStatusCode StatusCode { get; }
 
-        private ServiceResponse(byte[]? body, MediaTypeHeaderValue? contentType, HttpStatusCode statusCode, IEnumerable<(string, string)> headers)
+        private ServiceResponse((byte[] Content, MediaTypeHeaderValue Type)? body, HttpStatusCode statusCode, IEnumerable<(string, string)> headers)
         {
             Headers = headers;
             Body = body;
-            ContentType = contentType;
             StatusCode = statusCode;
         }
 
         public class Builder
         {
             private IEnumerable<(string Name, string Value)> _headers = new (string Name, string Value)[0];
-            private byte[]? _body;
-            private MediaTypeHeaderValue? _contentType;
+            private (byte[] Content, MediaTypeHeaderValue Type)? _body;
             private HttpStatusCode _statusCode = HttpStatusCode.OK;
             private readonly Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> _fixContentLengthHeader;
             public Builder() : this(IHttpMessage.FixContentLengthHeader) { }
@@ -57,8 +54,7 @@ namespace Servirtium.Core.Http
             public Builder Body(byte[] body, MediaTypeHeaderValue contentType, bool createContentLengthHeader = false)
             {
                 _headers = _fixContentLengthHeader(_headers, body, createContentLengthHeader);
-                _body = body;
-                _contentType = contentType;
+                _body = (body, contentType);
                 return this;
             }
 
@@ -66,7 +62,7 @@ namespace Servirtium.Core.Http
             {
                 if (_body!=null)
                 {
-                    _headers = _fixContentLengthHeader(_headers, _body, false);
+                    _headers = _fixContentLengthHeader(_headers, _body.Value.Content, false);
                 }
                 return this;
             }
@@ -74,7 +70,6 @@ namespace Servirtium.Core.Http
             public Builder From(IResponseMessage message)
             {
                 _body = message.Body;
-                _contentType = message.ContentType;
                 _headers = message.Headers;
                 _statusCode = message.StatusCode;
                 return this;
@@ -82,7 +77,7 @@ namespace Servirtium.Core.Http
 
             public ServiceResponse Build() 
             {
-                return new ServiceResponse(_body, _contentType, _statusCode, _headers);
+                return new ServiceResponse(_body, _statusCode, _headers);
             }
         }
 

@@ -32,11 +32,8 @@ namespace Servirtium.Core.Http
 
         IEnumerable<(string Name, string Value)> Headers { get; }
 
-        byte[]? Body { get; }
+        (byte[] Content, MediaTypeHeaderValue Type)? Body { get; }
 
-        MediaTypeHeaderValue? ContentType { get; }
-
-        bool HasBody => Body != null && ContentType != null;
 
     }
 

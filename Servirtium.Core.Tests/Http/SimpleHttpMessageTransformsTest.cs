@@ -33,7 +33,6 @@ namespace Servirtium.Core.Tests.Http
                 .TransformClientRequestForRealService(_baseRequest);
             Assert.Equal(new Uri("http://servirtium-service.com/down/the/garden"), transformed.Url);
             Assert.Equal(_baseRequest.Headers, transformed.Headers);
-            Assert.Null(transformed.ContentType);
             Assert.Null(transformed.Body);
             Assert.Equal(_baseRequest.Headers, transformed.Headers.ToArray());
         }
@@ -45,7 +44,6 @@ namespace Servirtium.Core.Tests.Http
                 .TransformClientRequestForRealService(_baseRequest);
             Assert.Equal(new Uri("http://real-service.com/down/the/garden"), transformed.Url);
             Assert.Equal(_baseRequest.Headers, transformed.Headers);
-            Assert.Null(transformed.ContentType);
             Assert.Null(transformed.Body);
             Assert.Equal(_baseRequest.Headers, transformed.Headers.ToArray());
         }
@@ -57,7 +55,6 @@ namespace Servirtium.Core.Tests.Http
                 .TransformClientRequestForRealService(_baseRequest);
             Assert.Equal(new Uri("http://real-service.com/down/the/garden"), transformed.Url);
             Assert.Equal(_baseRequest.Headers, transformed.Headers);
-            Assert.Null(transformed.ContentType);
             Assert.Null(transformed.Body);
         }
 
@@ -166,7 +163,6 @@ namespace Servirtium.Core.Tests.Http
             var transformed = new SimpleHttpMessageTransforms(REAL_SERVICE_URI)
                 .TransformRealServiceResponseForClient(_baseResponse);
             Assert.Equal(_baseResponse.Headers, transformed.Headers);
-            Assert.Null(transformed.ContentType);
             Assert.Null(transformed.Body);
         }
 
@@ -176,7 +172,6 @@ namespace Servirtium.Core.Tests.Http
             var transformed = new SimpleHttpMessageTransforms(REAL_SERVICE_URI, new Regex[0], new Regex[] { new Regex("missing-mock-header"), new Regex("another-missing-mock-header") })
                 .TransformRealServiceResponseForClient(_baseResponse);
             Assert.Equal(_baseResponse.Headers, transformed.Headers);
-            Assert.Null(transformed.ContentType);
             Assert.Null(transformed.Body);
         }
 

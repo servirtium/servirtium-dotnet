@@ -22,10 +22,10 @@ namespace Servirtium.Core.Http
         public async Task<IResponseMessage> InvokeServiceEndpoint(IRequestMessage requestMessage)
         {
             var request = new HttpRequestMessage(requestMessage.Method, requestMessage.Url);
-            if (requestMessage.HasBody)
+            if (requestMessage.Body.HasValue)
             {
-                request.Content = new ByteArrayContent(requestMessage.Body);
-                request.Content.Headers.ContentType = requestMessage.ContentType;
+                request.Content = new ByteArrayContent(requestMessage.Body.Value.Content);
+                request.Content.Headers.ContentType = requestMessage.Body.Value.Type;
             }
             foreach((string name, string value) in requestMessage.Headers)
             {

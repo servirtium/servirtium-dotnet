@@ -41,9 +41,7 @@ namespace Servirtium.Core.Tests.Interactions
         private void AddBodyToRequest() 
         {
             _mockValidRequest.Setup(i => i.Method).Returns(HttpMethod.Post);
-            _mockValidRequest.Setup(i => i.HasBody).Returns(true);
-            _mockValidRequest.Setup(i => i.Body).Returns(Encoding.UTF8.GetBytes("The request body."));
-            _mockValidRequest.Setup(i => i.ContentType).Returns(MediaTypeHeaderValue.Parse("text/html"));
+            _mockValidRequest.Setup(i => i.Body).Returns((Encoding.UTF8.GetBytes("The request body."), MediaTypeHeaderValue.Parse("text/html")));
         }
 
         public InteractionRecorderTest()
@@ -74,7 +72,7 @@ namespace Servirtium.Core.Tests.Interactions
         {
             var response = createRecorderToTest().GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
             _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(It.IsAny<IRequestMessage>()));
-            Assert.False(_capturedRequest!.HasBody);
+            Assert.Null(_capturedRequest!.Body);
             Assert.Equal(_mockValidRequest.Object.Headers, _capturedRequest.Headers);
             Assert.Equal(_mockValidRequest.Object.Method, _capturedRequest.Method);
             Assert.Equal(new Uri(new Uri("http://a.mock.service"), "/mock/request/path"), _capturedRequest.Url);
@@ -87,9 +85,9 @@ namespace Servirtium.Core.Tests.Interactions
             var response = createRecorderToTest().GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
             _mockServiceInterop.Verify(s => s.InvokeServiceEndpoint(It.IsAny<IRequestMessage>()));
-            Assert.True(_capturedRequest!.HasBody);
-            Assert.Equal(_mockValidRequest.Object.ContentType, _capturedRequest.ContentType);
-            Assert.Equal(_mockValidRequest.Object.Body, _capturedRequest.Body);
+            Assert.NotNull(_capturedRequest!.Body);
+            Assert.Equal(_mockValidRequest.Object.Body!.Value.Type, _capturedRequest.Body!.Value.Type);
+            Assert.Equal(_mockValidRequest.Object.Body.Value.Content, _capturedRequest.Body.Value.Content);
             Assert.Equal(_mockValidRequest.Object.Headers, _capturedRequest.Headers);
             Assert.Equal(_mockValidRequest.Object.Method, _capturedRequest.Method);
             Assert.Equal(new Uri(new Uri("http://a.mock.service"), "/mock/request/path"), _capturedRequest.Url);
@@ -149,9 +147,9 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
             Assert.Equal(serviceResponse.Headers, recorded.ResponseHeaders);
             Assert.True(recorded.HasResponseBody);
-            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body!);
+            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body.Value.Content!);
             Assert.Equal(bodyAsString, recorded.ResponseBody);
-            Assert.Equal(serviceResponse.ContentType, recorded.ResponseContentType);
+            Assert.Equal(serviceResponse.Body.Value.Type, recorded.ResponseContentType);
 
         }
 
@@ -223,9 +221,9 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
             Assert.Equal(serviceResponse.Headers, recorded.ResponseHeaders);
             Assert.True(recorded.HasResponseBody);
-            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body!);
+            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body!.Value.Content!);
             Assert.Equal(bodyAsString, recorded.ResponseBody);
-            Assert.Equal(serviceResponse.ContentType, recorded.ResponseContentType);
+            Assert.Equal(serviceResponse.Body.Value.Type, recorded.ResponseContentType);
         }
 
         [Fact]

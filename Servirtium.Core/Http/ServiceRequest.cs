@@ -8,13 +8,12 @@ namespace Servirtium.Core.Http
 {
     public class ServiceRequest : IRequestMessage
     {
-        public ServiceRequest(Uri url, HttpMethod method, IEnumerable<(string Name, string Value)> headers, byte[]? body, MediaTypeHeaderValue? contentType)
+        public ServiceRequest(Uri url, HttpMethod method, IEnumerable<(string Name, string Value)> headers, (byte[] Content, MediaTypeHeaderValue Type)? body)
         {
             Url = url;
             Method = method;
             Headers = headers;
             Body = body;
-            ContentType = contentType;
         }
 
         public Uri Url { get; }
@@ -23,9 +22,7 @@ namespace Servirtium.Core.Http
 
         public IEnumerable<(string Name, string Value)> Headers { get; }
 
-        public byte[]? Body { get; }
-
-        public MediaTypeHeaderValue? ContentType { get; }
+        public (byte[], MediaTypeHeaderValue)? Body { get; }
 
         public class Builder
         {
@@ -40,8 +37,7 @@ namespace Servirtium.Core.Http
             private readonly Func<IEnumerable<(string, string)>, byte[], bool, IEnumerable<(string, string)>> _fixContentLengthHeader;
             private Uri _url = new Uri("http://localhost");
             private IEnumerable<(string Name, string Value)> _headers = new (string Name, string Value)[0];
-            private byte[]? _body;
-            private MediaTypeHeaderValue? _contentType;
+            private (byte[] Content, MediaTypeHeaderValue Type)? _body;
             private HttpMethod _method = HttpMethod.Get;
 
             public Builder Url(Uri url)
@@ -68,8 +64,7 @@ namespace Servirtium.Core.Http
             public Builder Body(byte[] body, MediaTypeHeaderValue contentType, bool createContentLengthHeader = false)
             {
                 _headers = _fixContentLengthHeader(_headers, body, createContentLengthHeader);
-                _body = body;
-                _contentType = contentType;
+                _body = (body, contentType);
                 return this;
             }
 
@@ -77,7 +72,7 @@ namespace Servirtium.Core.Http
             {
                 if (_body != null)
                 {
-                    _headers = _fixContentLengthHeader(_headers, _body, false);
+                    _headers = _fixContentLengthHeader(_headers, _body.Value.Content, false);
                 }
                 return this;
             }
@@ -85,7 +80,6 @@ namespace Servirtium.Core.Http
             public Builder From(IRequestMessage message)
             {
                 _body = message.Body;
-                _contentType = message.ContentType;
                 _headers = message.Headers;
                 _method = message.Method;
                 _url = message.Url;
@@ -94,7 +88,7 @@ namespace Servirtium.Core.Http
 
             public ServiceRequest Build()
             {
-                return new ServiceRequest(_url, _method, _headers, _body, _contentType);
+                return new ServiceRequest(_url, _method, _headers, _body);
             }
         }
     }
