@@ -199,5 +199,94 @@ namespace Servirtium.Core.Tests.Http
             Assert.Single(response.Headers);
             Assert.Contains(("Content-Length", "A RESPONSE".Length.ToString()), response.Headers);
         }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseEmptyBodyAndContentType_ReturnsServiceResponseWithNoBody()
+        {
+            _responseToReturn.Content = new StringContent("",Encoding.UTF8, "text/plain");
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            Assert.False(response.Body.HasValue);
+        }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseStringBodyAndContentType_ReturnsServiceResponseWithNoBody()
+        {
+            _responseToReturn.Content = new StringContent("",Encoding.UTF8, "text/plain");
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            Assert.False(response.Body.HasValue);
+        }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseEmptyBinaryContent_ReturnsServiceResponseWithNoBody()
+        {
+            _responseToReturn.Content = new ByteArrayContent(new byte[0]);
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            Assert.False(response.Body.HasValue);
+        }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseWithBinaryContentAndNoContentType_ReturnsServiceResponseWithBody()
+        {
+            _responseToReturn.Content = new ByteArrayContent(new byte[3] {1,2,3});
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            Assert.False(response.Body.HasValue);
+        }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseWithBinaryContentAndContentType_ReturnsServiceResponseWithBody()
+        {
+            _responseToReturn.Content = new ByteArrayContent(new byte[3] {1,2,3});
+            _responseToReturn.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            var (content, type) = response.Body!.Value;
+            Assert.Equal(type, MediaTypeHeaderValue.Parse("application/octet-stream"));
+            Assert.Equal(3, content.Length);
+        }
+
+        [Fact]
+        public void InvokeServiceEndpoint_ResponseWitTextContentAndContentType_ReturnsServiceResponseWithBody()
+        {
+            _responseToReturn.Content = new StringContent("something",Encoding.UTF8, "text/plain");
+            var response = new ServiceInteropViaSystemNetHttp(new HttpClient(_mockMessageHandler.Object, true))
+                .InvokeServiceEndpoint(
+                    new ServiceRequest.Builder()
+                        .Method(HttpMethod.Get)
+                        .Url(new Uri("http://a.mock.service/endpoint"))
+                        .Build())
+                .Result;
+            var (content, type) = response.Body!.Value;
+            Assert.Equal(type, MediaTypeHeaderValue.Parse("text/plain; charset=utf-8"));
+            Assert.Equal("something", Encoding.UTF8.GetString(content));
+        }
     }
 }

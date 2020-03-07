@@ -45,14 +45,17 @@ namespace Servirtium.Core.Http
             HttpResponseMessage response;
             response = await _httpClient.SendAsync(request);
             var body = await response.Content.ReadAsByteArrayAsync();
-            return new ServiceResponse.Builder()
-                .Body(body, response.Content.Headers.ContentType)
+            var builder = new ServiceResponse.Builder()
                 .StatusCode(response.StatusCode)
                 .Headers(response.Headers
                     .SelectMany(h =>
                         h.Value.Select(v => (h.Key, v))
-                    ).Append(("Content-Length", body.Length.ToString())).ToArray())
-                .Build();
+                    ).Append(("Content-Length", body.Length.ToString())).ToArray());
+            if (body!=null && body.Length>0 && response.Content.Headers.ContentType!=null)
+            {
+                builder.Body(body, response.Content.Headers.ContentType);
+            }
+            return builder.Build();
         }
     }
 }
