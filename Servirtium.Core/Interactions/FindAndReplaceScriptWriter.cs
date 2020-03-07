@@ -76,10 +76,11 @@ namespace Servirtium.Core.Interactions
                     .From(interaction)
                     .RequestHeaders(updatedRequestHeaders)
                     .ResponseHeaders(updatedResponseHeaders);
-                if (interaction.HasRequestBody)
+                if (interaction.RequestBody.HasValue)
                 {
-                    builder.RequestBody(FixStringForRecording(interaction.RequestBody!, _replacementsForRecording
-                            .Where(rr => (rr.Context & ReplacementContext.RequestBody) == ReplacementContext.RequestBody)), interaction.RequestContentType!);
+                    var (content, type) = interaction.RequestBody.Value;
+                    builder.RequestBody(FixStringForRecording(content, _replacementsForRecording
+                            .Where(rr => (rr.Context & ReplacementContext.RequestBody) == ReplacementContext.RequestBody)), type);
                 }
 
                 return (IInteraction)builder.Build();

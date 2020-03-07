@@ -52,12 +52,15 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Get, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.False(interaction.HasRequestBody);
+            
+            Assert.False(interaction.RequestBody.HasValue);
 
             Assert.Equal(HttpStatusCode.OK, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), interaction.ResponseContentType);
-            Assert.Equal("SIMPLE GET RESPONSE", interaction.ResponseBody);
+
+            var (content, type) = interaction.ResponseBody!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), type);
+            Assert.Equal("SIMPLE GET RESPONSE", content);
         }
 
 
@@ -74,13 +77,15 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Post, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.Equal(MediaTypeHeaderValue.Parse("application/json"), interaction.RequestContentType);
-            Assert.Equal("{\"some\":\"json\"}", interaction.RequestBody);
+            var (requestContent, requestType) = interaction.RequestBody!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("application/json"), requestType);
+            Assert.Equal("{\"some\":\"json\"}", requestContent);
 
             Assert.Equal(HttpStatusCode.OK, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), interaction.ResponseContentType);
-            Assert.Equal("SIMPLE POST RESPONSE", interaction.ResponseBody);
+            var (content, type) = interaction.ResponseBody!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), type);
+            Assert.Equal("SIMPLE POST RESPONSE", content);
         }
 
         [Fact]
@@ -94,12 +99,13 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Put, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.Equal(MediaTypeHeaderValue.Parse("application/json"), interaction.RequestContentType);
-            Assert.Equal("{\"some\":\"json\"}", interaction.RequestBody);
+            var (requestContent, requestType) = interaction.RequestBody!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("application/json"), requestType);
+            Assert.Equal("{\"some\":\"json\"}", requestContent);
 
             Assert.Equal(HttpStatusCode.OK, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.False(interaction.HasResponseBody);
+            Assert.False(interaction.ResponseBody.HasValue);
         }
 
         [Fact]
@@ -113,11 +119,11 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Delete, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.False(interaction.HasRequestBody);
+            Assert.False(interaction.RequestBody.HasValue);
 
             Assert.Equal(HttpStatusCode.OK, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.False(interaction.HasResponseBody);
+            Assert.False(interaction.ResponseBody.HasValue);
         }
 
         [Fact]
@@ -132,12 +138,14 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Get, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.False(interaction.HasRequestBody);
+            Assert.False(interaction.RequestBody.HasValue);
 
             Assert.Equal(HttpStatusCode.NotFound, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), interaction.ResponseContentType);
-            Assert.Equal("NOTHIN' DOIN'", interaction.ResponseBody);
+            
+            var (content, type) = interaction.ResponseBody!.Value;
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/plain"), type);
+            Assert.Equal("NOTHIN' DOIN'", content);
         }
 
         [Fact]
@@ -151,11 +159,11 @@ namespace Servirtium.Core.Tests.Interactions
 
             Assert.Equal(HttpMethod.Delete, interaction.Method);
             Assert.Equal(_baselineMockRequestHeaders, interaction.RequestHeaders);
-            Assert.False(interaction.HasRequestBody);
+            Assert.False(interaction.RequestBody.HasValue);
 
             Assert.Equal(HttpStatusCode.Forbidden, interaction.StatusCode);
             Assert.Equal(_baselineMockResponseHeaders, interaction.ResponseHeaders);
-            Assert.False(interaction.HasResponseBody);
+            Assert.False(interaction.ResponseBody.HasValue);
         }
 
         [Fact]

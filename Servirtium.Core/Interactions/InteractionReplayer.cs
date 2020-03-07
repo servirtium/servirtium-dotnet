@@ -46,20 +46,21 @@ namespace Servirtium.Core.Interactions
             {
                 throw new ArgumentException($"Fixed & filtered HTTP request headers: {Environment.NewLine}{String.Join(Environment.NewLine, request.Headers.Select(h => $"{h.Name}: {h.Value}"))}{Environment.NewLine} do not contain all the headers recorded in conversation for interaction {interactionNumber}: {Environment.NewLine}{String.Join(Environment.NewLine, recordedInteraction.RequestHeaders.Select(h=>$"{h.Name}: {h.Value}"))}.");
             }
-            if (request.Body.HasValue != recordedInteraction.HasRequestBody)
+            if (request.Body.HasValue != recordedInteraction.RequestBody.HasValue)
             {
-                throw new ArgumentException($"HTTP request {(request.Body.HasValue ? "does" : "does not")} have a body, whereas recorded interaction {(recordedInteraction.HasRequestBody ? "does" : "does not")} for interaction {interactionNumber}.");
+                throw new ArgumentException($"HTTP request {(request.Body.HasValue ? "does" : "does not")} have a body, whereas recorded interaction {(recordedInteraction.RequestBody.HasValue ? "does" : "does not")} for interaction {interactionNumber}.");
             }
 
-            if (request.Body.HasValue && recordedInteraction.HasRequestBody)
+            if (request.Body.HasValue && recordedInteraction.RequestBody.HasValue)
             {
                 var (content, type) = request.Body.Value;
-                if (!type.Equals(recordedInteraction.RequestContentType))
+                var (recordedBody, recordedType) = recordedInteraction.RequestBody.Value;
+                if (!type.Equals(recordedType))
                 {
-                    throw new ArgumentException($"HTTP request content type '{type}' does not match method recorded in conversation for interaction {interactionNumber}, '{recordedInteraction.RequestContentType}'.");
+                    throw new ArgumentException($"HTTP request content type '{type}' does not match method recorded in conversation for interaction {interactionNumber}, '{recordedType}'.");
                 }
                 var bodyString =  _requestBodyFormatter.Write(content, type);
-                if (bodyString != recordedInteraction.RequestBody)
+                if (bodyString != recordedBody)
                 {
                     throw new ArgumentException($"HTTP request body '{bodyString}' does not match method body in conversation for interaction {interactionNumber}, '{recordedInteraction.RequestBody}'.");
                 }
@@ -70,10 +71,11 @@ namespace Servirtium.Core.Interactions
                 .StatusCode(recordedInteraction.StatusCode)
                 .Headers(recordedInteraction.ResponseHeaders);
 
-            if (recordedInteraction.HasResponseBody)
+            if (recordedInteraction.ResponseBody.HasValue)
             {
-                var body = _responseBodyFormatter.Read(recordedInteraction.ResponseBody!, recordedInteraction.ResponseContentType!);
-                builder.Body(body, recordedInteraction.ResponseContentType!);
+                var (content, type) = recordedInteraction.ResponseBody.Value;
+                var body = _responseBodyFormatter.Read(content, type);
+                builder.Body(body, type);
             }
 
             return Task.FromResult<IResponseMessage>(builder.Build());

@@ -38,23 +38,15 @@ namespace Servirtium.Core.Interactions
 
         public string Path { get; }
 
-        public MediaTypeHeaderValue? RequestContentType { get; }
-
         public IEnumerable<(string Name, string Value)> RequestHeaders { get; }
-        public bool HasRequestBody => RequestBody != null && RequestContentType != null;
 
-        public string? RequestBody { get; }
+        public (string Content, MediaTypeHeaderValue Type)? RequestBody { get; }
 
         public HttpStatusCode StatusCode { get; }
 
-        public MediaTypeHeaderValue? ResponseContentType { get; }
-
         public IEnumerable<(string Name, string Value)> ResponseHeaders { get; }
 
-        public string? ResponseBody { get; }
-
-        public bool HasResponseBody=> ResponseBody != null && ResponseContentType != null;
-
+        public (string Content, MediaTypeHeaderValue Type)? ResponseBody { get; }
     }
 
     class NoopInteraction : IInteraction
@@ -67,19 +59,16 @@ namespace Servirtium.Core.Interactions
 
         public string Path => String.Empty;
 
-        public MediaTypeHeaderValue? RequestContentType => default;
 
         public IEnumerable<(string, string)> RequestHeaders => new (string,string)[0];
 
-        public string? RequestBody => default;
+        public (string Content, MediaTypeHeaderValue Type)? RequestBody => default;
 
         public HttpStatusCode StatusCode => default;
-
-        public MediaTypeHeaderValue? ResponseContentType => default;
-
+        
         public IEnumerable<(string Name, string Value)> ResponseHeaders => new (string, string)[0];
 
-        public string? ResponseBody => default;
+        public (string Content, MediaTypeHeaderValue Type)? ResponseBody => default;
     }
 
     public static class Interaction

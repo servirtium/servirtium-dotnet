@@ -18,13 +18,11 @@ namespace Servirtium.Core.Interactions
             IEnumerable<IInteraction.Note> notes,
             HttpMethod method,
             string path,
-            MediaTypeHeaderValue? requestContentType,
             IEnumerable<(string, string)> requestHeaders,
-            string? requestBody,
+            (string Content, MediaTypeHeaderValue Type)? requestBody,
             HttpStatusCode statusCode,
-            MediaTypeHeaderValue? responseContentType,
             IEnumerable<(string, string)> responseHeaders,
-            string? responseBody)
+            (string Content, MediaTypeHeaderValue Type)? responseBody)
         {
             Number = number;
             Notes = notes;
@@ -32,13 +30,11 @@ namespace Servirtium.Core.Interactions
             Path = path;
 
             //Request
-            RequestContentType = requestContentType;
             RequestHeaders = requestHeaders;
             RequestBody = requestBody;
 
             //Response
             StatusCode = statusCode;
-            ResponseContentType = responseContentType;
             ResponseHeaders = responseHeaders;
             ResponseBody = responseBody;
         }
@@ -51,19 +47,15 @@ namespace Servirtium.Core.Interactions
 
         public string Path { get; }
 
-        public MediaTypeHeaderValue? RequestContentType { get; }
-
         public IEnumerable<(string, string)> RequestHeaders { get; }
 
-        public string? RequestBody { get; }
+        public (string Content, MediaTypeHeaderValue Type)? RequestBody { get; }
 
         public HttpStatusCode StatusCode { get; }
 
-        public MediaTypeHeaderValue? ResponseContentType { get; }
-
         public IEnumerable<(string, string)> ResponseHeaders { get; }
 
-        public string? ResponseBody { get; }
+        public (string Content, MediaTypeHeaderValue Type)? ResponseBody { get; }
 
         public class Builder
         {
@@ -77,19 +69,15 @@ namespace Servirtium.Core.Interactions
 
             private string _path = "";
 
-            private MediaTypeHeaderValue? _requestContentType;
-
             private IEnumerable<(string, string)> _requestHeaders = new (string, string)[0];
 
-            private string? _requestBody;
+            private (string Content, MediaTypeHeaderValue Type)? _requestBody;
 
             private HttpStatusCode _statusCode;
 
-            private MediaTypeHeaderValue? _responseContentType;
-
             private IEnumerable<(string, string)> _responseHeaders = new (string, string)[0];
 
-            private string? _responseBody;
+            private (string Content, MediaTypeHeaderValue Type)? _responseBody;
 
             public Builder Number(int number)
             {
@@ -123,15 +111,13 @@ namespace Servirtium.Core.Interactions
 
             public Builder RequestBody(string requestBody, MediaTypeHeaderValue requestContentType)
             {
-                _requestBody = requestBody;
-                _requestContentType = requestContentType;
+                _requestBody = (requestBody, requestContentType);
                 return this;
             }
 
             public Builder RemoveRequestBody()
             {
                 _requestBody = null;
-                _requestContentType = null;
                 return this;
             }
 
@@ -149,15 +135,13 @@ namespace Servirtium.Core.Interactions
 
             public Builder ResponseBody(string responseBody, MediaTypeHeaderValue responseContentType)
             {
-                _responseBody = responseBody;
-                _responseContentType = responseContentType;
+                _responseBody = (responseBody, responseContentType);
                 return this;
             }
 
             public Builder RemoveResponseBody()
             {
                 _responseBody = null;
-                _responseContentType = null;
                 return this;
             }
 
@@ -170,17 +154,20 @@ namespace Servirtium.Core.Interactions
                 RequestHeaders(existing.RequestHeaders);
                 ResponseHeaders(existing.ResponseHeaders);
                 StatusCode(existing.StatusCode);
-                if (existing.RequestBody != null && existing.RequestContentType!=null)
+                if (existing.RequestBody.HasValue)
                 {
-                    RequestBody(existing.RequestBody, existing.RequestContentType);
+                    var (content, type) = existing.RequestBody.Value;
+                    RequestBody(content, type);
                 }
-                else 
+                else
                 {
                     RemoveRequestBody();
                 }
-                if (existing.ResponseBody != null && existing.ResponseContentType!=null)
+
+                if (existing.ResponseBody.HasValue)
                 {
-                    ResponseBody(existing.ResponseBody, existing.ResponseContentType);
+                    var (content, type) = existing.ResponseBody.Value;
+                    ResponseBody(content, type);
                 }
                 else
                 {
@@ -195,7 +182,7 @@ namespace Servirtium.Core.Interactions
                 {
                     _built = true;
 
-                    return new ImmutableInteraction(_number, _notes, _method, _path, _requestContentType, _requestHeaders, _requestBody, _statusCode, _responseContentType, _responseHeaders, _responseBody);
+                    return new ImmutableInteraction(_number, _notes, _method, _path, _requestHeaders, _requestBody, _statusCode, _responseHeaders, _responseBody);
                 }
                 throw new InvalidOperationException("This builder class is only intended to build a single instance. Use a new Builder for each instance you want to create.");
             }

@@ -32,11 +32,9 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(original.Method, copy.Method);
             Assert.Equal(original.RequestHeaders.Single(), copy.RequestHeaders.Single());
             Assert.Equal(original.RequestBody, copy.RequestBody);
-            Assert.Equal(original.RequestContentType, copy.RequestContentType);
             Assert.Equal(original.StatusCode, copy.StatusCode);
             Assert.Equal(original.ResponseHeaders.Single(), copy.ResponseHeaders.Single());
             Assert.Equal(original.ResponseBody, copy.ResponseBody);
-            Assert.Equal(original.ResponseContentType, copy.ResponseContentType);
         }
 
         [Fact]
@@ -57,7 +55,6 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(original.Path, bodyRemoved.Path);
             Assert.Equal(original.Method, bodyRemoved.Method);
             Assert.Null(bodyRemoved.RequestBody);
-            Assert.Null(bodyRemoved.RequestContentType);
         }
 
         [Fact]
@@ -74,7 +71,6 @@ namespace Servirtium.Core.Tests.Interactions
                 .Build();
             Assert.Equal(original.StatusCode, bodyRemoved.StatusCode);
             Assert.Null(bodyRemoved.ResponseBody);
-            Assert.Null(bodyRemoved.ResponseContentType);
         }
     }
 }

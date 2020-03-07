@@ -143,13 +143,14 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal("/mock/request/path", recorded.Path);
             Assert.Equal(HttpMethod.Get, recorded.Method);
             Assert.Equal(_requestHeaders, recorded.RequestHeaders);
-            Assert.False(recorded.HasRequestBody);
+            Assert.False(recorded.RequestBody.HasValue);
             Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
             Assert.Equal(serviceResponse.Headers, recorded.ResponseHeaders);
-            Assert.True(recorded.HasResponseBody);
-            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body.Value.Content!);
-            Assert.Equal(bodyAsString, recorded.ResponseBody);
-            Assert.Equal(serviceResponse.Body.Value.Type, recorded.ResponseContentType);
+            Assert.True(recorded.ResponseBody.HasValue);
+            var bodyAsString = Encoding.UTF8.GetString(serviceResponse.Body.Value.Content!);
+            var (content, type) = recorded.ResponseBody.Value;
+            Assert.Equal(bodyAsString, content);
+            Assert.Equal(serviceResponse.Body.Value.Type, type);
 
         }
 
@@ -167,7 +168,7 @@ namespace Servirtium.Core.Tests.Interactions
                 It.Is<byte[]>(b=>Encoding.UTF8.GetString(b)=="The response body"), 
                 MediaTypeHeaderValue.Parse("text/plain")));
             var recorded = _capturedInteractions![1337];
-            Assert.Equal("FORMATTED RESPONSE BODY", recorded.ResponseBody);
+            Assert.Equal("FORMATTED RESPONSE BODY", recorded.ResponseBody!.Value.Content);
         }
 
         [Fact]
@@ -185,7 +186,7 @@ namespace Servirtium.Core.Tests.Interactions
                 It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == "The request body."),
                 MediaTypeHeaderValue.Parse("text/html")));
             var recorded = _capturedInteractions![1337];
-            Assert.Equal("FORMATTED REQUEST BODY", recorded.RequestBody);
+            Assert.Equal("FORMATTED REQUEST BODY", recorded.RequestBody!.Value.Content);
         }
 
         [Fact]
@@ -215,15 +216,18 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal("/mock/request/path", recorded.Path);
             Assert.Equal(HttpMethod.Post, recorded.Method);
             Assert.Equal(_requestHeaders, recorded.RequestHeaders);
-            Assert.True(recorded.HasRequestBody);
-            Assert.Equal("The request body.", recorded.RequestBody);
-            Assert.Equal(MediaTypeHeaderValue.Parse("text/html"), recorded.RequestContentType);
+            Assert.True(recorded.RequestBody.HasValue);
+            var (requestContent, requestType) = recorded.RequestBody!.Value;
+            Assert.Equal("The request body.", requestContent);
+            Assert.Equal(MediaTypeHeaderValue.Parse("text/html"), requestType);
             Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
             Assert.Equal(serviceResponse.Headers, recorded.ResponseHeaders);
-            Assert.True(recorded.HasResponseBody);
-            var bodyAsString = UTF8Encoding.UTF8.GetString(serviceResponse.Body!.Value.Content!);
-            Assert.Equal(bodyAsString, recorded.ResponseBody);
-            Assert.Equal(serviceResponse.Body.Value.Type, recorded.ResponseContentType);
+            Assert.True(recorded.ResponseBody.HasValue);
+            var (responseContent, responseType) = recorded.ResponseBody!.Value;
+            var (content, type) = serviceResponse.Body!.Value;
+            var bodyAsString = Encoding.UTF8.GetString(content);
+            Assert.Equal(bodyAsString, responseContent);
+            Assert.Equal(type, responseType);
         }
 
         [Fact]

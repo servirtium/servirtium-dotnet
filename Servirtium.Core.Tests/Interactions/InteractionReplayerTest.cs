@@ -41,9 +41,7 @@ namespace Servirtium.Core.Tests.Interactions
             _mockRecordedInteraction.SetupGet(i => i.Method).Returns(HttpMethod.Get);
             _mockRecordedInteraction.SetupGet(i => i.RequestHeaders).Returns(new[] { ("header-name", "header-value"),("another-header-name", "another header-value") });
             _mockRecordedInteraction.SetupGet(i => i.StatusCode).Returns(HttpStatusCode.OK); 
-            _mockRecordedInteraction.SetupGet(i => i.ResponseBody).Returns("the response body");
-            _mockRecordedInteraction.SetupGet(i => i.ResponseContentType).Returns(MediaTypeHeaderValue.Parse("text/plain"));
-            _mockRecordedInteraction.SetupGet(i => i.HasResponseBody).Returns(true);
+            _mockRecordedInteraction.SetupGet(i => i.ResponseBody).Returns(("the response body", MediaTypeHeaderValue.Parse("text/plain")));
 
             _baselineInteractions[1337] = _mockRecordedInteraction.Object;
 
@@ -71,9 +69,7 @@ namespace Servirtium.Core.Tests.Interactions
 
         private void AddRequestBodyToInteraction(Mock<IInteraction> interactionMock)
         {
-            interactionMock.Setup(i => i.HasRequestBody).Returns(true);
-            interactionMock.Setup(i => i.RequestBody).Returns("A request body");
-            interactionMock.Setup(i => i.RequestContentType).Returns(new MediaTypeHeaderValue("text/html"));
+            interactionMock.Setup(i => i.RequestBody).Returns(("A request body", new MediaTypeHeaderValue("text/html")));
             interactionMock.Setup(i => i.Method).Returns(HttpMethod.Post);
         }
 
@@ -91,10 +87,11 @@ namespace Servirtium.Core.Tests.Interactions
             var replayer = GenerateReplayer();
             var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
             var (content, type) = response.Body!.Value;
+            var (recordedContent, recordedType) = _mockRecordedInteraction.Object.ResponseBody!.Value;
             string responseBodyString = BodyAsString(content);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString); 
+            Assert.Equal(recordedContent, responseBodyString); 
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode); 
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseContentType, type);
+            Assert.Equal(recordedType, type);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseHeaders.ToString(), response.Headers.ToString());
         }
 
@@ -107,11 +104,12 @@ namespace Servirtium.Core.Tests.Interactions
             AddRequestBodyToInteraction(_mockRecordedInteraction);
             AddBodyToRequest(_mockValidRequest);
             var (content, type) = response.Body!.Value;
+            var (recordedContent, recordedType) = _mockRecordedInteraction.Object.ResponseBody!.Value;
 
             string responseBodyString = BodyAsString(content);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
+            Assert.Equal(recordedContent, responseBodyString);
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseContentType, type);
+            Assert.Equal(recordedType, type);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseHeaders, response.Headers);
         }
 
@@ -163,10 +161,12 @@ namespace Servirtium.Core.Tests.Interactions
             var response=replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
             var (content, type) = response.Body!.Value;
+            var (recordedContent, recordedType) = _mockRecordedInteraction.Object.ResponseBody!.Value;
+
             string responseBodyString = BodyAsString(content);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
+            Assert.Equal(recordedContent, responseBodyString);
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseContentType, type);
+            Assert.Equal(recordedType, type);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseHeaders, response.Headers);
         }
 
@@ -178,11 +178,12 @@ namespace Servirtium.Core.Tests.Interactions
             var response = replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Result;
 
             var (content, type) = response.Body!.Value;
+            var (recordedContent, recordedType) = _mockRecordedInteraction.Object.ResponseBody!.Value;
             string responseBodyString = BodyAsString(content);
 
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseBody, responseBodyString);
+            Assert.Equal(recordedContent, responseBodyString);
             Assert.Equal(_mockRecordedInteraction.Object.StatusCode, response.StatusCode);
-            Assert.Equal(_mockRecordedInteraction.Object.ResponseContentType, type);
+            Assert.Equal(recordedType, type);
             Assert.Equal(_mockRecordedInteraction.Object.ResponseHeaders, response.Headers);
         }
 
@@ -227,7 +228,7 @@ namespace Servirtium.Core.Tests.Interactions
             var replayer = GenerateReplayer(MockCustomBodyFormatter().Object);
 
             AddRequestBodyToInteraction(_mockRecordedInteraction);
-            _mockRecordedInteraction.Setup(i => i.RequestBody).Returns("CUSTOM FORMATTED BODY");
+            _mockRecordedInteraction.Setup(i => i.RequestBody).Returns(("CUSTOM FORMATTED BODY",MediaTypeHeaderValue.Parse("text/html")));
             AddBodyToRequest(_mockValidRequest);
             replayer.GetServiceResponseForRequest(1337, _mockValidRequest.Object).Wait();
         }

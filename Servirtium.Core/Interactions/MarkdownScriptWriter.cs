@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -70,6 +71,21 @@ namespace Servirtium.Core.Interactions
 
 ";
                     }));
+                    string requestContent = "", requestType = "";
+                    if (interaction.RequestBody.HasValue)
+                    {
+                        var (content, type) = interaction.RequestBody.Value;
+                        requestContent = content;
+                        requestType = type.ToString();
+                    }
+                    string responseContent = "", responseType = "";
+                    if (interaction.ResponseBody.HasValue)
+                    {
+                        var (content, type) = interaction.ResponseBody.Value;
+                        responseContent = content;
+                        responseType = type.ToString();
+                    }
+
                     var httpMethodMarkdown = _settings.EmphasiseHttpVerbs ? $"*{interaction.Method}*" : interaction.Method.ToString();
                     var markdown = $@"## Interaction {interaction.Number}: {httpMethodMarkdown} {interaction.Path}
 
@@ -77,17 +93,17 @@ namespace Servirtium.Core.Interactions
 
 {WrapInCodeBlock(String.Join(Environment.NewLine, interaction.RequestHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}")))}
 
-### Request body recorded for playback ({interaction.RequestContentType?.ToString() ?? ""}):
+### Request body recorded for playback ({requestType}):
 
-{WrapInCodeBlock(interaction.RequestBody)}
+{WrapInCodeBlock(requestContent)}
 
 ### Response headers recorded for playback:
 
 {WrapInCodeBlock(String.Join(Environment.NewLine, interaction.ResponseHeaders.Select(headerTuple => $"{headerTuple.Item1}: {headerTuple.Item2}")))}
 
-### Response body recorded for playback ({(int)interaction.StatusCode}: {interaction.ResponseContentType?.ToString() ?? ""}):
+### Response body recorded for playback ({(int)interaction.StatusCode}: {responseType}):
 
-{WrapInCodeBlock(interaction.ResponseBody)}
+{WrapInCodeBlock(responseContent)}
 
 ";
                     writer.Write(markdown);
