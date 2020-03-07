@@ -97,7 +97,7 @@ namespace Servirtium.AspNetCore.Tests
         {
             HandleNoBodyRequest(RequestHandler());
             _mockInternalHandler.Verify(h => h.ProcessRequest(It.IsAny<IRequestMessage>(), _notes));
-            Assert.Equal(HttpMethod.Get, _requestToProcess.Method);
+            Assert.Equal(HttpMethod.Get, _requestToProcess!.Method);
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToProcess.Url);
             Assert.Empty(_requestToProcess.Headers);
             Assert.False(_requestToProcess.HasBody);
@@ -108,7 +108,7 @@ namespace Servirtium.AspNetCore.Tests
         {
             HandleBodyRequest(RequestHandler());
             _mockInternalHandler.Verify(h => h.ProcessRequest(It.IsAny<IRequestMessage>(), _notes));
-            Assert.Equal(HttpMethod.Post, _requestToProcess.Method);
+            Assert.Equal(HttpMethod.Post, _requestToProcess!.Method);
             Assert.Equal(new Uri("http://a.mock.service/endpoint"), _requestToProcess.Url);
             Assert.Empty(_requestToProcess.Headers);
             Assert.True(_requestToProcess.HasBody);
@@ -124,7 +124,7 @@ namespace Servirtium.AspNetCore.Tests
                 ("another-value", new []{ "value" })
             });
             _mockInternalHandler.Verify(h => h.ProcessRequest(It.IsAny<IRequestMessage>(), _notes));
-            Assert.Equal(4, _requestToProcess.Headers.Count());
+            Assert.Equal(4, _requestToProcess!.Headers.Count());
             Assert.Contains(("single-value", "value"), _requestToProcess.Headers);
             Assert.Contains(("multi-value", "value1"), _requestToProcess.Headers);
             Assert.Contains(("multi-value", "value2"), _requestToProcess.Headers);
