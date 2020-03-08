@@ -13,14 +13,16 @@ namespace Servirtium.Core.Interactions
         [Flags]
         public enum ReplacementContext
         {
-            RequestHeader,
-            RequestBody,
-            ResponseHeader
+            None = 0,
+            RequestHeader = 1,
+            RequestBody = 2,
+            ResponseHeader = 4,
+            ResponseBody = 8
         }
 
         public struct RegexReplacement
         {
-            public RegexReplacement(Regex matcher, string replacement, ReplacementContext context = ReplacementContext.RequestBody | ReplacementContext.RequestHeader | ReplacementContext.ResponseHeader)
+            public RegexReplacement(Regex matcher, string replacement, ReplacementContext context = (ReplacementContext.RequestBody | ReplacementContext.RequestHeader | ReplacementContext.ResponseHeader | ReplacementContext.ResponseBody))
             {
                 Matcher = matcher;
                 Replacement = replacement;
@@ -49,9 +51,8 @@ namespace Servirtium.Core.Interactions
         private static (string, string) FixHeaderForRecording((string, string) input, IEnumerable<RegexReplacement> regexReplacements)
         {
             (string name, string val) = input;
-            var fixedHeaderText = FixStringForRecording($"{name}: {val}", regexReplacements
-                .Where(rr => (rr.Context & ReplacementContext.ResponseHeader) == ReplacementContext.ResponseHeader));
-            var headerBits = fixedHeaderText.Split(':', 2);
+            var fixedHeaderText = FixStringForRecording($"{name}: {val}", regexReplacements);
+            var headerBits = fixedHeaderText.Split(": ", 2);
             return (headerBits[0], headerBits[1]);
         }
 
@@ -81,6 +82,12 @@ namespace Servirtium.Core.Interactions
                     var (content, type) = interaction.RequestBody.Value;
                     builder.RequestBody(FixStringForRecording(content, _replacementsForRecording
                             .Where(rr => (rr.Context & ReplacementContext.RequestBody) == ReplacementContext.RequestBody)), type);
+                }
+                if (interaction.ResponseBody.HasValue)
+                {
+                    var (content, type) = interaction.ResponseBody.Value;
+                    builder.ResponseBody(FixStringForRecording(content, _replacementsForRecording
+                        .Where(rr => (rr.Context & ReplacementContext.ResponseBody) == ReplacementContext.ResponseBody)), type);
                 }
 
                 return (IInteraction)builder.Build();
