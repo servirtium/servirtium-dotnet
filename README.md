@@ -80,8 +80,8 @@ From the solution directory:
 
 ### Published NuGet assemblies
 
-* [Servirtium.Core/0.3.0](https://www.nuget.org/packages/Servirtium.Core/0.3.0)
-* [Servirtium.AspNetCore/0.3.0](https://www.nuget.org/packages/Servirtium.AspNetCore/0.3.0)
+* [Servirtium.Core/1.0.0](https://www.nuget.org/packages/Servirtium.Core/1.0.0)
+* [Servirtium.AspNetCore/1.0.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.0.0)
 
 ## Current Status
 
@@ -90,7 +90,5 @@ The Servirtium implementation guide is complete and all features are implemented
 ## Roadmap
 
 Current roadmap in priority order:
-
-* Add injectable logging support using the `Microsoft.Extensions.Logging`.
 
 * Productionise standalone server host executable (currently used to sanity check HTTP requests from tests against those sent from postman) to offer a subset of Servirtium functionality out of process.
