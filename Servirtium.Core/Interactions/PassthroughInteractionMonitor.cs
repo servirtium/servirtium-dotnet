@@ -1,4 +1,5 @@
-﻿using Servirtium.Core.Http;
+﻿using Microsoft.Extensions.Logging;
+using Servirtium.Core.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +14,8 @@ namespace Servirtium.Core.Interactions
         private readonly IServiceInteroperation _service;
         private readonly Uri? _redirectHost;
 
-        public PassThroughInteractionMonitor(bool bypassProxy = false) : this(null, new ServiceInteropViaSystemNetHttp(bypassProxy)) { }
-        public PassThroughInteractionMonitor(Uri redirectHost) : this(redirectHost, new ServiceInteropViaSystemNetHttp()) { }
+        public PassThroughInteractionMonitor(bool bypassProxy = false, ILoggerFactory? loggerFactory = null) : this(null, new ServiceInteropViaSystemNetHttp(bypassProxy, loggerFactory)) { }
+        public PassThroughInteractionMonitor(Uri redirectHost, ILoggerFactory? loggerFactory = null) : this(redirectHost, new ServiceInteropViaSystemNetHttp(false, loggerFactory)) { }
 
         public PassThroughInteractionMonitor(Uri? redirectHost, IServiceInteroperation service)
         {

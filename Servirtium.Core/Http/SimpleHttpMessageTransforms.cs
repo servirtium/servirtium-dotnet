@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Http
 {
@@ -11,15 +13,18 @@ namespace Servirtium.Core.Http
         private readonly Uri? _realServiceHost;
         private readonly IEnumerable<Regex> _requestHeaderExcludePatterns, _responseHeaderExcludePatterns;
 
+        private readonly ILogger<SimpleHttpMessageTransforms> _logger;
 
-        public SimpleHttpMessageTransforms(Uri realServiceHost) : this(realServiceHost, new Regex[0], new Regex[0])
+
+        public SimpleHttpMessageTransforms(Uri realServiceHost, ILoggerFactory? loggerFactory = null) : this(realServiceHost, new Regex[0], new Regex[0], loggerFactory)
         { }
         
-        public SimpleHttpMessageTransforms(IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns) : this(null, requestHeaderExcludePatterns, responseHeadersExcludePatterns)
+        public SimpleHttpMessageTransforms(IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns, ILoggerFactory? loggerFactory = null) : this(null, requestHeaderExcludePatterns, responseHeadersExcludePatterns, loggerFactory)
         { }
 
-        public SimpleHttpMessageTransforms(Uri? realServiceHost, IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns)
+        public SimpleHttpMessageTransforms(Uri? realServiceHost, IEnumerable<Regex> requestHeaderExcludePatterns, IEnumerable<Regex> responseHeadersExcludePatterns, ILoggerFactory? loggerFactory = null)
         {
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger<SimpleHttpMessageTransforms>();
             _realServiceHost = realServiceHost !=null ?
                 new Uri(realServiceHost.GetLeftPart(UriPartial.Authority)) : null;
             _requestHeaderExcludePatterns = requestHeaderExcludePatterns;
@@ -35,6 +40,7 @@ namespace Servirtium.Core.Http
 
         public IRequestMessage TransformClientRequestForRealService(IRequestMessage clientRequest)
         {
+            _logger.LogDebug($"Transforming {clientRequest.Method} request to {clientRequest.Url} for forwarding to service");
             string hostAndPort;
             if (_realServiceHost != null)
             {
@@ -67,7 +73,9 @@ namespace Servirtium.Core.Http
             {
                 builder.Url(new Uri(_realServiceHost, clientRequest.Url.PathAndQuery));
             }
-            return builder.Build();
+            var transformed = builder.Build();
+            _logger.LogDebug($"Transformed {transformed.Method} request to {transformed.Url} for forwarding to service");
+            return transformed;
         }
 
 

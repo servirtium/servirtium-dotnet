@@ -7,12 +7,14 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Interactions
 {
     public class MarkdownScriptReader : IScriptReader
     {
-        public static readonly string SERVIRTIUM_INTERACTION = "## Interaction ";
+        private static readonly string SERVIRTIUM_INTERACTION = "## Interaction ";
 
         private static string GetCodeBlockPattern(string captureName) =>
             $@"(?:
@@ -21,7 +23,7 @@ namespace Servirtium.Core.Interactions
 )";
         private static string CodeBlockContents(CaptureCollection codeBlockLines) => String.Join("", codeBlockLines).TrimEnd('\r', '\n');
 
-        private static readonly Regex _indentedCodeBlockNewLine = new Regex(@"((?:\r\n)|\n|\r)    ", RegexOptions.Compiled);
+        private static readonly Regex INDENTED_CODE_BLOCK_NEWLINE = new Regex(@"((?:\r\n)|\n|\r)    ", RegexOptions.Compiled);
 
         //Parses markdown for a single interaction and captures the content into named capture groups
         private static readonly Regex INTERACTION_REGEX = new Regex(
@@ -79,6 +81,15 @@ namespace Servirtium.Core.Interactions
                     }
                     return (bits[0].Trim(), String.Join(":", bits.Skip(1)).Trim());
                 });
+
+        private readonly ILogger<MarkdownScriptReader> _logger;
+
+        public MarkdownScriptReader(ILoggerFactory? loggerFactory = null)
+        {
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance)
+                .CreateLogger<MarkdownScriptReader>();
+        }
+        
         public IDictionary<int, IInteraction> Read(TextReader reader)
         {
 
@@ -89,7 +100,7 @@ namespace Servirtium.Core.Interactions
             {
                 throw new ArgumentException($"No '{SERVIRTIUM_INTERACTION.Trim()}' found in conversation '{conversation} '. Wrong/empty script file?");
             }
-
+            _logger.LogDebug($"Loading conversation of {interactionSections.Length-1} interactions.");
             var allInteractions = interactionSections.Skip(1)
                 .Select<string, IInteraction>(interactionMarkdown =>
                     {
@@ -121,7 +132,7 @@ namespace Servirtium.Core.Interactions
                                 else if (content.StartsWith("    "))
                                 {
                                     contentType = IInteraction.Note.NoteType.Code;
-                                    content = _indentedCodeBlockNewLine.Replace(content[4..], "$1");
+                                    content = INDENTED_CODE_BLOCK_NEWLINE.Replace(content[4..], "$1");
                                 }
                                 return new IInteraction.Note(contentType, c.Value, content);
                             })
@@ -134,7 +145,8 @@ namespace Servirtium.Core.Interactions
                             .RequestHeaders(HeaderTextToHeaderList(CodeBlockContents(match.Groups["requestHeaders"].Captures)))
                             .ResponseHeaders(HeaderTextToHeaderList(CodeBlockContents(match.Groups["responseHeaders"].Captures)))
                             .StatusCode(Enum.Parse<HttpStatusCode>(match.Groups["statusCode"].Value));
-
+                        
+                        
                         var requestBody = CodeBlockContents(match.Groups["requestBody"].Captures);
                         if (match.Groups["requestContentType"].Success && requestBody.Any())
                         {
@@ -146,7 +158,9 @@ namespace Servirtium.Core.Interactions
                         {
                             builder.ResponseBody(responseBody, MediaTypeHeaderValue.Parse(match.Groups["responseContentType"].Value));
                         }
-                        return builder.Build();
+                        var interaction = builder.Build();
+                        _logger.LogDebug($"Read interaction {interaction.Number}, a {interaction.Method} request to {interaction.Path}, returning {interaction.StatusCode}{(interaction.Notes.Any() ? $", with {interaction.Notes.Count()} notes." : ".")}");
+                        return interaction;
                     })
                 .ToDictionary(interaction => interaction.Number, interaction => interaction);
 
@@ -155,9 +169,5 @@ namespace Servirtium.Core.Interactions
             return allInteractions;
         }
 
-        private IEnumerable<(string, string)> HeaderTextToHeaderList(object select)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

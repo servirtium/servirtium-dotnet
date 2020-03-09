@@ -7,11 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Interactions
 {
     public class InteractionReplayer : IInteractionMonitor
     {
+        private readonly ILogger<InteractionReplayer> _logger;
         private string _filename = "no filename set";
         private IDictionary<int, IInteraction> _allInteractions;
         private readonly IScriptReader _scriptReader;
@@ -20,12 +23,13 @@ namespace Servirtium.Core.Interactions
         private readonly IBodyFormatter _responseBodyFormatter;
 
 
-        public InteractionReplayer(IScriptReader? scriptReader =null, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null)
+        public InteractionReplayer(IScriptReader? scriptReader =null, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null, ILoggerFactory? loggerFactory = null)
         {
-            _scriptReader = scriptReader ?? new MarkdownScriptReader();
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger<InteractionReplayer>();
+            _scriptReader = scriptReader ?? new MarkdownScriptReader(loggerFactory);
             _allInteractions = interactions ?? new Dictionary<int, IInteraction> { };
-            _requestBodyFormatter = requestBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
-            _responseBodyFormatter = responseBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter());
+            _requestBodyFormatter = requestBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter(), loggerFactory);
+            _responseBodyFormatter = responseBodyFormatter ?? new TextAndBinaryBodyFormatter(new UTF8TextBodyFormatter(), new Base64BinaryBodyFormatter(), loggerFactory);
 
         }
 
@@ -33,6 +37,7 @@ namespace Servirtium.Core.Interactions
         {
             //Validate the request is the same as it was when it was recorded
             var recordedInteraction = _allInteractions[interactionNumber];
+            _logger.LogDebug($"Validating {request.Method} to {request.Url} against interaction {interactionNumber} for replaying.");
             if (request.Url.PathAndQuery != recordedInteraction.Path)
             {
                 throw new ArgumentException($"HTTP request path '{request.Url.PathAndQuery}' does not match method recorded in conversation for interaction {interactionNumber}, '{recordedInteraction.Path}'.");
@@ -65,7 +70,9 @@ namespace Servirtium.Core.Interactions
                     throw new ArgumentException($"HTTP request body '{bodyString}' does not match method body in conversation for interaction {interactionNumber}, '{recordedInteraction.RequestBody}'.");
                 }
             }
-                
+            
+            _logger.LogDebug($"{request.Method} to {request.Url} is valid to replay against interaction {interactionNumber}.");
+            
             //Return completed task, no async logic required in the playback method
             var builder = new ServiceResponse.Builder()
                 .StatusCode(recordedInteraction.StatusCode)
@@ -78,7 +85,9 @@ namespace Servirtium.Core.Interactions
                 builder.Body(body, type);
             }
 
-            return Task.FromResult<IResponseMessage>(builder.Build());
+            var response = builder.Build();
+            _logger.LogDebug($"Replaying {response.StatusCode} response against {request.Method} to {request.Url} for interaction {interactionNumber}.");
+            return Task.FromResult<IResponseMessage>(response);
         }
 
 
@@ -94,7 +103,9 @@ namespace Servirtium.Core.Interactions
         public void ReadPlaybackConversation(TextReader conversationReader, string filename = "no filename set")
         {
             _filename = filename;
+            _logger.LogDebug($"Loading interactions from '{filename}'");
             _allInteractions = _scriptReader.Read(conversationReader);
+            _logger.LogInformation($"Loaded {_allInteractions.Count()} interactions from '{filename}'");
         }
     }
 }

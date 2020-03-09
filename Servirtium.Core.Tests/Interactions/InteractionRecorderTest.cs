@@ -138,7 +138,7 @@ namespace Servirtium.Core.Tests.Interactions
             recorder.FinishedScript(1, false);
             _mockScriptWriter.Verify(sw => sw.Write(_mockWriter.Object, It.IsAny<IDictionary<int, IInteraction>>()));
             Assert.Equal(1, _capturedInteractions!.Count);
-            var recorded = _capturedInteractions[1337];
+            var recorded = _capturedInteractions![1337];
             Assert.Equal(1337, recorded.Number);
             Assert.Equal("/mock/request/path", recorded.Path);
             Assert.Equal(HttpMethod.Get, recorded.Method);
@@ -147,10 +147,10 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(HttpStatusCode.OK, recorded.StatusCode);
             Assert.Equal(serviceResponse.Headers, recorded.ResponseHeaders);
             Assert.True(recorded.ResponseBody.HasValue);
-            var bodyAsString = Encoding.UTF8.GetString(serviceResponse.Body.Value.Content!);
-            var (content, type) = recorded.ResponseBody.Value;
+            var bodyAsString = Encoding.UTF8.GetString(serviceResponse.Body!.Value.Content!);
+            var (content, type) = recorded.ResponseBody!.Value;
             Assert.Equal(bodyAsString, content);
-            Assert.Equal(serviceResponse.Body.Value.Type, type);
+            Assert.Equal(serviceResponse.Body!.Value.Type, type);
 
         }
 

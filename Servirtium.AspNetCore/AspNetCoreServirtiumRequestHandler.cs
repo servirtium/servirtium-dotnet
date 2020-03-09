@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Servirtium.Core;
 using Servirtium.Core.Http;
@@ -16,15 +17,19 @@ using Servirtium.Core.Interactions;
 [assembly: InternalsVisibleTo("Servirtium.AspNetCore.Tests")]
 namespace Servirtium.AspNetCore
 {
-    public class AspNetCoreServirtiumRequestHandler
+    internal class AspNetCoreServirtiumRequestHandler
     {
         private readonly IServirtiumRequestHandler _internalHandler;
 
+        private readonly ILogger<AspNetCoreServirtiumRequestHandler> _logger;
+
         internal AspNetCoreServirtiumRequestHandler(
-            IServirtiumRequestHandler internalHandler
+            IServirtiumRequestHandler internalHandler,
+            ILoggerFactory loggerFactory
             )
         {
             _internalHandler = internalHandler;
+            _logger = loggerFactory.CreateLogger<AspNetCoreServirtiumRequestHandler>();
         }
 
         internal async Task HandleRequest(
@@ -60,8 +65,9 @@ namespace Servirtium.AspNetCore
                 }
             }
             var request = requestBuilder.Build();
-
+            _logger.LogDebug($"Processing {request.Method} Request to {request.Url}.");
             var clientResponse = await _internalHandler.ProcessRequest(request, notes);
+            _logger.LogDebug($"Processed {request.Method} request to {request.Url}, result: {clientResponse.StatusCode}.");
 
             //Always remove the 'Transfer-Encoding: chunked' header if present.
             //If it's present in the response.Headers collection ast this point, Kestrel expects you to add chunk notation to the body yourself

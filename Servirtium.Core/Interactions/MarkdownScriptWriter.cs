@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Interactions
 {
@@ -21,10 +23,14 @@ namespace Servirtium.Core.Interactions
             public bool EmphasiseHttpVerbs  = false;
         }
 
+        private readonly ILogger<MarkdownScriptWriter> _logger;
+        
         private readonly Settings _settings;
 
-        public MarkdownScriptWriter(Settings? settings = null)
+        public MarkdownScriptWriter(Settings? settings = null, ILoggerFactory? loggerFactory = null)
         {
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance)
+                .CreateLogger<MarkdownScriptWriter>();
             this._settings = settings ?? new Settings();
         }
 
@@ -53,7 +59,8 @@ namespace Servirtium.Core.Interactions
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
             int finalInteractionNumber = interactions.Keys.Any() ? interactions.Keys.Max() : -1;
-
+            _logger.LogDebug($"Recording {finalInteractionNumber+1} interactions");
+            
             for (var i = 0; i <= finalInteractionNumber; i++)
             {
                 if (interactions.TryGetValue(i, out var interaction))
@@ -107,12 +114,14 @@ namespace Servirtium.Core.Interactions
 
 ";
                     writer.Write(markdown);
+                    _logger.LogDebug($"Wrote interaction {i}, A {interaction.Method} request to {interaction.Path}, returning {interaction.StatusCode}{(interaction.Notes.Any() ? $", with {interaction.Notes.Count()} notes." : ".")}");
                 }
                 else
                 {
                     throw new ArgumentException($"Interaction number {i} was missing (final interaction number: {finalInteractionNumber}). The MarkdownScriptWriter requires a contiguously numbered set of interactions, starting at zero.");
                 }
             }
+            _logger.LogInformation($"Recorded {finalInteractionNumber+1} interactions");
         }
     }
 }

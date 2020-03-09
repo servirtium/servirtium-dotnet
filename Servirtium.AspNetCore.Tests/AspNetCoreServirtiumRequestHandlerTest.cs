@@ -15,24 +15,26 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Servirtium.AspNetCore.Tests
 {
     public class AspNetCoreServirtiumRequestHandlerTest
     {
-
+        #nullable disable
         class MockHeaders : Dictionary<string, StringValues>, IHeaderDictionary
         {
             public MockHeaders() : base(StringComparer.InvariantCultureIgnoreCase) { }
             public long? ContentLength { get; set; }
         }
+        #nullable enable
 
         private readonly Mock<IServirtiumRequestHandler> _mockInternalHandler;
 
-        private Mock<IHeaderDictionary> _mockRequestHeaders;
+        private readonly Mock<IHeaderDictionary> _mockRequestHeaders;
 
-        private MockHeaders _sentResponseHeaders = new MockHeaders();
+        private readonly MockHeaders _sentResponseHeaders = new MockHeaders();
 
         private readonly Mock<IEnumerator<KeyValuePair<string, StringValues>>> _mockRequestHeaderEnumerator;
 
@@ -73,7 +75,7 @@ namespace Servirtium.AspNetCore.Tests
         }
 
         private AspNetCoreServirtiumRequestHandler RequestHandler() =>
-            new AspNetCoreServirtiumRequestHandler(_mockInternalHandler.Object);
+            new AspNetCoreServirtiumRequestHandler(_mockInternalHandler.Object, NullLoggerFactory.Instance);
 
         private void HandleNoBodyRequest(AspNetCoreServirtiumRequestHandler handler, IEnumerable<IInteraction.Note>? notes = null)=>
             handler.HandleRequest(new Uri("http://a.mock.service"), "endpoint", HttpMethod.Get.Method, _mockRequestHeaders.Object, null, null, _mockStatusCodeSetter.Object, _sentResponseHeaders, _responseBody, _mockResponseContentTypeSetter.Object, notes ?? _notes).Wait();

@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Primitives;
 using Servirtium.Core;
 using Servirtium.Core.Http;
@@ -21,22 +23,27 @@ namespace Servirtium.AspNetCore
     {
         private readonly IHost _host;
 
+        private readonly ILogger<AspNetCoreServirtiumServer> _logger;
+        
         private readonly IServirtiumRequestHandler _servirtiumRequestHandler;
 
         IServirtiumRequestHandler IServirtiumServer.InternalRequestHandler => _servirtiumRequestHandler;
 
         private readonly ICollection<IInteraction.Note> _notesForNextInteraction = new LinkedList<IInteraction.Note>();
       
-        public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), port);
-        public static AspNetCoreServirtiumServer Default(int port, IInteractionMonitor monitor, Uri serviceHost) =>
-            WithTransforms(port, monitor, new SimpleHttpMessageTransforms(serviceHost));
-        public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms) =>
-            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), null);
+        public static AspNetCoreServirtiumServer WithTransforms(int port, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms, ILoggerFactory? loggerFactory = null) =>
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), port, loggerFactory);
+        public static AspNetCoreServirtiumServer Default(int port, IInteractionMonitor monitor, Uri serviceHost, ILoggerFactory? loggerFactory = null) =>
+            WithTransforms(port, monitor, new SimpleHttpMessageTransforms(serviceHost), loggerFactory);
+        public static AspNetCoreServirtiumServer WithCommandLineArgs(string[] args, IInteractionMonitor monitor, IHttpMessageTransforms interactionTransforms, ILoggerFactory? loggerFactory = null) =>
+            new AspNetCoreServirtiumServer(Host.CreateDefaultBuilder(args), new InteractionRecordingServirtiumRequestHandler(interactionTransforms, monitor), null, loggerFactory);
 
         //private static readonly 
-        internal AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IServirtiumRequestHandler servirtiumHandler, int? port)
+        internal AspNetCoreServirtiumServer(IHostBuilder hostBuilder, IServirtiumRequestHandler servirtiumHandler, int? port, ILoggerFactory? loggerFactoryParameter = null)
         {
+            var loggerFactory = loggerFactoryParameter ?? NullLoggerFactory.Instance;
+            _logger = loggerFactory.CreateLogger<AspNetCoreServirtiumServer>();
+            
             _servirtiumRequestHandler = servirtiumHandler;
 
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
@@ -48,7 +55,7 @@ namespace Servirtium.AspNetCore
                 }
                 webBuilder.Configure(app =>
                 {
-                    var handler = new AspNetCoreServirtiumRequestHandler(servirtiumHandler);
+                    var handler = new AspNetCoreServirtiumRequestHandler(servirtiumHandler, loggerFactory);
                     app.Run(async ctx =>
                     {
                         var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
@@ -56,7 +63,7 @@ namespace Servirtium.AspNetCore
 
                         ctx.Response.OnCompleted(() =>
                         {
-                            Console.WriteLine($"{ctx.Request.Method} Request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
+                            _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
                             return Task.CompletedTask;
                         });
                         List<IInteraction.Note> notes;
@@ -76,7 +83,9 @@ namespace Servirtium.AspNetCore
 
         public async Task<IServirtiumServer> Start()
         {
+            _logger.LogDebug($"Host starting.");
             await _host.StartAsync();
+            _logger.LogInformation($"Host successfully started.");
             return this;
         }
 
@@ -84,15 +93,18 @@ namespace Servirtium.AspNetCore
         {
             ((IServirtiumServer)this).FinishedScript();
             await _host.StopAsync();
+            _logger.LogInformation($"Host successfully stopped.");
         }
 
         public void MakeNote(string title, string note)
         {
+            _logger.LogDebug($"Making text note, title: '{title}'.");
             _notesForNextInteraction.Add(new IInteraction.Note(IInteraction.Note.NoteType.Text, title, note));
         }
 
         public void MakeCodeNote(string title, string code)
         {
+            _logger.LogDebug($"Making code note, title: '{title}'.");
             _notesForNextInteraction.Add(new IInteraction.Note(IInteraction.Note.NoteType.Code, title, code));
         }
     }

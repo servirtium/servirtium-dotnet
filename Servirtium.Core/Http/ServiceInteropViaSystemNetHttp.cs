@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Http
 {
@@ -12,10 +14,13 @@ namespace Servirtium.Core.Http
     {
         private readonly HttpClient _httpClient;
 
-        public ServiceInteropViaSystemNetHttp(bool bypassProxy = false): this(new HttpClient(new HttpClientHandler{ UseProxy = !bypassProxy})) { }
+        private readonly ILogger<ServiceInteropViaSystemNetHttp> _logger;
 
-        public ServiceInteropViaSystemNetHttp(HttpClient httpClient)
+        public ServiceInteropViaSystemNetHttp(bool bypassProxy = false, ILoggerFactory? loggerFactory = null): this(new HttpClient(new HttpClientHandler{ UseProxy = !bypassProxy}), loggerFactory) { }
+
+        public ServiceInteropViaSystemNetHttp(HttpClient httpClient, ILoggerFactory? loggerFactory = null)
         {
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger<ServiceInteropViaSystemNetHttp>();
             _httpClient = httpClient;
         }
 
@@ -42,8 +47,9 @@ namespace Servirtium.Core.Http
                     }
                 }
             }
-            HttpResponseMessage response;
-            response = await _httpClient.SendAsync(request);
+            _logger.LogDebug($"Forwarding {request.Method} request to {request.RequestUri}");
+            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            _logger.LogDebug($"Received {response.StatusCode} response from {request.Method} request to {request.RequestUri}");
             var body = await response.Content.ReadAsByteArrayAsync();
             var builder = new ServiceResponse.Builder()
                 .StatusCode(response.StatusCode)

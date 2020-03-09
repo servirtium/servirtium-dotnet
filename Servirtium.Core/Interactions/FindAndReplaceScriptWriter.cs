@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Servirtium.Core.Interactions
 {
@@ -20,7 +22,7 @@ namespace Servirtium.Core.Interactions
             ResponseBody = 8
         }
 
-        public struct RegexReplacement
+        public readonly struct RegexReplacement
         {
             public RegexReplacement(Regex matcher, string replacement, ReplacementContext context = (ReplacementContext.RequestBody | ReplacementContext.RequestHeader | ReplacementContext.ResponseHeader | ReplacementContext.ResponseBody))
             {
@@ -56,14 +58,18 @@ namespace Servirtium.Core.Interactions
             return (headerBits[0], headerBits[1]);
         }
 
-        public FindAndReplaceScriptWriter(IEnumerable<RegexReplacement> replacementsForRecording, IScriptWriter delegateScriptWriter)
+        private readonly ILogger<FindAndReplaceScriptWriter> _logger;
+
+        public FindAndReplaceScriptWriter(IEnumerable<RegexReplacement> replacementsForRecording, IScriptWriter delegateScriptWriter, ILoggerFactory? loggerFactory = null)
         {
+            _logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger<FindAndReplaceScriptWriter>();
             _replacementsForRecording = replacementsForRecording;
             _delegateScriptWriter = delegateScriptWriter;
         }
 
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
+            _logger.LogDebug($"Performing find & replace sweep on {interactions.Count} interactions with {_replacementsForRecording.Count()} replacements.");
             var interactionsToRecord = interactions.ToDictionary(kvp => kvp.Key, kvp =>
             {
                 var interaction = kvp.Value;
@@ -90,7 +96,9 @@ namespace Servirtium.Core.Interactions
                         .Where(rr => (rr.Context & ReplacementContext.ResponseBody) == ReplacementContext.ResponseBody)), type);
                 }
 
-                return (IInteraction)builder.Build();
+                var transformed = (IInteraction)builder.Build();
+                _logger.LogDebug($"Performed find & replace sweep on interaction {transformed.Number}, a {interaction.Method} request to {transformed.Path} returning {transformed.StatusCode}.");
+                return transformed;
             });
             _delegateScriptWriter.Write(writer, interactionsToRecord);
         }
