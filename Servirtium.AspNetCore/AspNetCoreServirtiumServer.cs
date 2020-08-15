@@ -93,7 +93,9 @@ namespace Servirtium.AspNetCore
         {
             ((IServirtiumServer)this).FinishedScript();
             await _host.StopAsync();
+            _host.Dispose();
             _logger.LogInformation($"Host successfully stopped.");
+            
         }
 
         public void MakeNote(string title, string note)
