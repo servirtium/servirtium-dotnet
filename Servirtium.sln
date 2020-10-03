@@ -11,12 +11,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Servirtium.Core.Tests", "Se
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{70C121B4-5E08-46A6-ACE2-7B2C63D78333}"
 	ProjectSection(SolutionItems) = preProject
+		compatibility-suite.py = compatibility-suite.py
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Servirtium.StandaloneServer", "Servirtium.StandaloneServer\Servirtium.StandaloneServer.csproj", "{FE27A4A3-A432-41E7-9DA0-F5F81E04E68D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Servirtium.AspNetCore.Tests", "Servirtium.AspNetCore.Tests\Servirtium.AspNetCore.Tests.csproj", "{7C2DCE46-2A2D-4149-B3CF-7FE31260BE94}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Servirtium.AspNetCore.Tests", "Servirtium.AspNetCore.Tests\Servirtium.AspNetCore.Tests.csproj", "{7C2DCE46-2A2D-4149-B3CF-7FE31260BE94}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "compatibility-suite", "compatibility-suite", "{0985B3CB-FEFD-45A6-B5F3-AC5060F70AE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
