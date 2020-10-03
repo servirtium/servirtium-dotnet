@@ -16,10 +16,12 @@ if len(sys.argv) > 1:
    if sys.argv[1] == "record":
        # TODO check that .NET process is already started.
        url = "http://localhost:1234"
-       dotnet_process = subprocess.Popen(["dotnet", "Servirtium.StandaloneServer/bin/Debug/netcoreapp3.1/Servirtium.StandaloneServer.dll", "record", "--urls=http://*:1234"])
+       dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "--urls=http://*:1234"])
+       print(".NET process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "playback":
        url = "http://localhost:1234"
-       dotnet_process = subprocess.Popen(["dotnet", "Servirtium.StandaloneServer/bin/Debug/netcoreapp3.1/Servirtium.StandaloneServer.dll", "playback", "--urls=http://*:1234"])
+       dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "--urls=http://*:1234"])
+       print(".NET process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "direct":
        print("showing reference Sinatra app online without Servirtium in the middle")
        url = "https://todo-backend-sinatra.herokuapp.com"
@@ -29,7 +31,6 @@ if len(sys.argv) > 1:
 else:
    print("record/playback/direct argument needed")
    exit(10)
-print(".NET process: "+str(dotnet_process.pid))
 driver = webdriver.Chrome("D:/Tools/chromedriver.exe")
 
 # time.sleep(5)

@@ -10,11 +10,12 @@ namespace Servirtium.StandaloneServer
 {
     public class Program
     {
-        internal static readonly string RECORDING_OUTPUT_DIRECTORY = @"..\..\..\test_recording_output".Replace('\\', Path.DirectorySeparatorChar);
+        internal static readonly string RECORDING_OUTPUT_DIRECTORY = @".\test_recording_output".Replace('\\', Path.DirectorySeparatorChar);
 
         public static void Main(string[] args)
         {
             var command = args[0].ToLower();
+            Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
             IInteractionMonitor monitor = (command) switch
             {
                 "playback" => new InteractionReplayer(),
@@ -25,11 +26,13 @@ namespace Servirtium.StandaloneServer
                 ),
                 _ => throw new ArgumentException($"Unsupported command: '{command}', supported commands are 'playback' and 'record'."),
             };
-            AspNetCoreServirtiumServer.WithCommandLineArgs(args, monitor, new SimpleHttpMessageTransforms(
+            var server = AspNetCoreServirtiumServer.WithCommandLineArgs(args, monitor, new SimpleHttpMessageTransforms(
                 new Uri("http://todo-backend-sinatra.herokuapp.com"),
                 new Regex[0],
-                new[] { new Regex("Date:") })).Start().Wait();
+                new[] { new Regex("Date:") }));
+            server.Start().Wait();
             Console.ReadKey();
+            server.Stop().Wait();
         }
 
     }
