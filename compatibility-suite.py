@@ -11,17 +11,19 @@ import subprocess
 import time
 
 dotnet_process = None
-
+# os.environ["HTTP_PROXY"] = "http://localhost:1234"
 if len(sys.argv) > 1:
    if sys.argv[1] == "record":
        # TODO check that .NET process is already started.
        url = "http://localhost:1234"
-       dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "--urls=http://*:1234"])
-       print(".NET process: "+str(dotnet_process.pid))
+       with open('myfile', "w") as outfile:
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+       print(".NET record process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "playback":
        url = "http://localhost:1234"
-       dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "--urls=http://*:1234"])
-       print(".NET process: "+str(dotnet_process.pid))
+       with open('myfile', "w") as outfile:
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+       print(".NET playback process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "direct":
        print("showing reference Sinatra app online without Servirtium in the middle")
        url = "https://todo-backend-sinatra.herokuapp.com"
@@ -31,13 +33,18 @@ if len(sys.argv) > 1:
 else:
    print("record/playback/direct argument needed")
    exit(10)
-driver = webdriver.Chrome("D:/Tools/chromedriver.exe")
 
+chrome_options = webdriver.ChromeOptions()
+#chrome_options.add_argument("--proxy-server=%s" % "localhost:1234")
+chrome_options.add_argument("--auto-open-devtools-for-tabs")
+
+chrome = webdriver.Chrome(executable_path="D:/Tools/chromedriver.exe", options=chrome_options)
+# url = "http://todo-backend-sinatra.herokuapp.com"
 # time.sleep(5)
 
-driver.get("https://www.todobackend.com/specs/index.html?" + url + "/todos")
+chrome.get("http://www.todobackend.com/specs/index.html?" + url + "/todos")
 try:
-    element = WebDriverWait(driver, 300).until(
+    element = WebDriverWait(chrome, 300).until(
         EC.text_to_be_present_in_element((By.CLASS_NAME, "passes"), "16")
     )
     print("Compatibility suite: all 16 tests passed")
@@ -52,12 +59,8 @@ print("mode: " + sys.argv[1])
 
 if dotnet_process is not None:
     print("Killing Servirtium.NET")
-    if platform.system() == "Windows":
-        os.kill(dotnet_process.pid, signal.CTRL_C_EVENT)
-    else:
-        os.killpg(os.getpgid(dotnet_process.pid), signal.SIGTERM)
-    dotnet_process.kill()
+    dotnet_process.communicate(input="x".encode("utf-8"))
 
 print("Closing Selenium")
-driver.quit()
+chrome.quit()
 print("All done.")

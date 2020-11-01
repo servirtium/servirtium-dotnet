@@ -1,14 +1,12 @@
 ﻿using Servirtium.Core.Http;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Text;
 
 namespace Servirtium.Core.Interactions
 {
@@ -22,6 +20,22 @@ namespace Servirtium.Core.Interactions
         private readonly IBodyFormatter _requestBodyFormatter;
         private readonly IBodyFormatter _responseBodyFormatter;
 
+        private void LogBodies(IRequestMessage incoming, IInteraction recorded)
+        {
+            if (incoming.Body.HasValue)
+            {
+                var (content, type) = incoming.Body.Value;
+                var contentString = Encoding.UTF8.GetString(content);
+                _logger.LogDebug($"Incoming Request Content-Type: {type}");
+                _logger.LogDebug($"Incoming Request Content:{Environment.NewLine}{contentString}{Environment.NewLine}({contentString.Length} characters)");
+            }
+            if (recorded.RequestBody.HasValue)
+            {
+                var (content, type) = recorded.RequestBody.Value;
+                _logger.LogDebug($"Recorded Request Content-Type: {type}");
+                _logger.LogDebug($"Recorded Request Content:{Environment.NewLine}{content}");
+            }
+        }
 
         public InteractionReplayer(IScriptReader? scriptReader =null, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null, ILoggerFactory? loggerFactory = null)
         {
@@ -53,11 +67,13 @@ namespace Servirtium.Core.Interactions
             }
             if (request.Body.HasValue != recordedInteraction.RequestBody.HasValue)
             {
+                LogBodies(request, recordedInteraction);
                 throw new ArgumentException($"HTTP request {(request.Body.HasValue ? "does" : "does not")} have a body, whereas recorded interaction {(recordedInteraction.RequestBody.HasValue ? "does" : "does not")} for interaction {interactionNumber}.");
             }
 
             if (request.Body.HasValue && recordedInteraction.RequestBody.HasValue)
             {
+                LogBodies(request, recordedInteraction);
                 var (content, type) = request.Body.Value;
                 var (recordedBody, recordedType) = recordedInteraction.RequestBody.Value;
                 if (!type.Equals(recordedType))

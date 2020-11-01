@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using Servirtium.AspNetCore;
-using Servirtium.Core;
 using Servirtium.Core.Http;
 using Servirtium.Core.Interactions;
 
@@ -15,23 +17,52 @@ namespace Servirtium.StandaloneServer
         public static void Main(string[] args)
         {
             var command = args[0].ToLower();
-            Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
-            IInteractionMonitor monitor = (command) switch
+            var scriptDirectory = Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
+            var loggerFactory= LoggerFactory.Create((builder) =>
             {
-                "playback" => new InteractionReplayer(),
-                "record" => new InteractionRecorder(
-                    Path.Combine(RECORDING_OUTPUT_DIRECTORY, "recording.md"),
-                    new FindAndReplaceScriptWriter(new[] { new FindAndReplaceScriptWriter.RegexReplacement(new Regex("User-Agent: .*"), "User-Agent: Servirtium-Testing") }, 
-                    new MarkdownScriptWriter())
-                ),
-                _ => throw new ArgumentException($"Unsupported command: '{command}', supported commands are 'playback' and 'record'."),
+                builder.SetMinimumLevel(LogLevel.Debug)
+                    .AddFilter(level => true)
+                    .AddConsole();
+            });
+            IInteractionMonitor monitor;
+            switch (command)
+            {
+                case "playback":
+                    { 
+                        var replayer = new InteractionReplayer(null, null, null, null, loggerFactory); 
+                        var scriptFile = scriptDirectory.GetFiles()
+                                     .OrderByDescending(f => f.LastWriteTime)
+                                     .First();
+                        replayer.LoadScriptFile(scriptFile.FullName);
+                        monitor = replayer;
+                        break;
+                    }
+                case "record":
+                    {
+                        monitor = new InteractionRecorder(
+                            Path.Combine(RECORDING_OUTPUT_DIRECTORY, $"recording_{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.md"),
+                            new MarkdownScriptWriter()
+                        );
+                        break;
+                    }
+                default:
+                    throw new ArgumentException($"Unsupported command: '{command}', supported commands are 'playback' and 'record'.");
             };
-            var server = AspNetCoreServirtiumServer.WithCommandLineArgs(args, monitor, new SimpleHttpMessageTransforms(
-                new Uri("http://todo-backend-sinatra.herokuapp.com"),
-                new Regex[0],
-                new[] { new Regex("Date:") }));
+            var server = AspNetCoreServirtiumServer.WithCommandLineArgs(
+                args, 
+                monitor, 
+                new SimpleHttpMessageTransforms(
+                    new Uri("http://todo-backend-sinatra.herokuapp.com"),
+                    new Regex[] { },
+                    new[] { new Regex("Date:") }
+                ),
+                loggerFactory
+            );
             server.Start().Wait();
-            Console.ReadKey();
+            AppDomain.CurrentDomain.ProcessExit += (a, e) => server.Stop().Wait();
+            Console.Read();
+
+            //Debugger.Launch();
             server.Stop().Wait();
         }
 
