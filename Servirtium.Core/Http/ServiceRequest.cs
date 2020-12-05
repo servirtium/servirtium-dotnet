@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -23,6 +24,33 @@ namespace Servirtium.Core.Http
         public IEnumerable<(string Name, string Value)> Headers { get; }
 
         public (byte[], MediaTypeHeaderValue)? Body { get; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is ServiceRequest request &&
+                   EqualityComparer<Uri>.Default.Equals(Url, request.Url) &&
+                   EqualityComparer<HttpMethod>.Default.Equals(Method, request.Method) &&
+                   Enumerable.SequenceEqual(Headers, request.Headers) &&
+                   (
+                       (!Body.HasValue && !request.Body.HasValue)
+                       || (Body.HasValue && request.Body.HasValue &&
+                            EqualityComparer<MediaTypeHeaderValue>.Default.Equals(Body.Value.Item2, request.Body.Value.Item2) &&
+                            Enumerable.SequenceEqual(Body.Value.Item1, request.Body.Value.Item1)
+                            )
+                   );
+        }
+
+        public static bool operator ==(ServiceRequest? left, ServiceRequest? right)
+        {
+            return 
+                (left==null && right==null) ||
+                (left!=null && right!=null && EqualityComparer<ServiceRequest>.Default.Equals(left, right));
+        }
+
+        public static bool operator !=(ServiceRequest? left, ServiceRequest? right)
+        {
+            return !(left == right);
+        }
 
         public class Builder
         {

@@ -20,6 +20,31 @@ namespace Servirtium.Core.Http
             Body = body;
             StatusCode = statusCode;
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is ServiceResponse request &&
+                   EqualityComparer<HttpStatusCode>.Default.Equals(StatusCode, request.StatusCode) &&
+                   Enumerable.SequenceEqual(Headers, request.Headers) &&
+                   (
+                       (!Body.HasValue && !request.Body.HasValue)
+                       || (Body.HasValue && request.Body.HasValue &&
+                            EqualityComparer<MediaTypeHeaderValue>.Default.Equals(Body.Value.Item2, request.Body.Value.Item2) &&
+                            Enumerable.SequenceEqual(Body.Value.Item1, request.Body.Value.Item1)
+                            )
+                   );
+        }
+
+        public static bool operator ==(ServiceResponse? left, ServiceResponse? right)
+        {
+            return
+                (left == null && right == null) ||
+                (left != null && right != null && EqualityComparer<ServiceResponse>.Default.Equals(left, right));
+        }
+
+        public static bool operator !=(ServiceResponse? left, ServiceResponse? right)
+        {
+            return !(left == right);
+        }
 
         public class Builder
         {
