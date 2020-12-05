@@ -57,7 +57,17 @@ namespace Servirtium.AspNetCore
             _servirtiumRequestHandler = servirtiumHandler;
 
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
-            {                    
+            {
+                webBuilder.ConfigureServices(app =>
+                {
+                    
+                    app.AddCors(c => c.AddDefaultPolicy(c => { 
+                        c.AllowAnyOrigin();
+                        c.AllowAnyMethod();
+                        c.AllowAnyHeader();
+                        c.AllowCredentials();
+                    }));
+                });
                 if (port != null)
                 {
                     //If a port is specified, override urls with specified port, listening on all available hosts, for HTTP.
@@ -68,28 +78,37 @@ namespace Servirtium.AspNetCore
                     var handler = new AspNetCoreServirtiumRequestHandler(servirtiumHandler, loggerFactory);
                     app.Run(async ctx =>
                     {
-                        var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                        var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
+                        if (HttpMethods.IsOptions(ctx.Request.Method))
+                        {
+                            //Kill CORS in the face, bypass any Servirtium logic.
+                            ctx.Response.Headers.Append("Access-Control-Allow-Origin", new StringValues("*"));
+                            ctx.Response.Headers.Append("Access-Control-Allow-Methods", new StringValues("*"));
+                            ctx.Response.Headers.Append("Access-Control-Allow-Headers", new StringValues("*"));
+                            ctx.Response.Headers.Append("Access-Control-Allow-Credentials", new StringValues(new string[] { "true", ctx.Request.Host.Value }));
+                            ctx.Response.Headers.Append("Access-Control-Max-Age", new StringValues("864000"));
 
-                        ctx.Response.OnCompleted(() =>
-                        {
-                            _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
-                            return Task.CompletedTask;
-                        });
-                        List<IInteraction.Note> notes;
-                        lock (_notesForNextInteraction)
-                        {
-                            notes = new List<IInteraction.Note>(_notesForNextInteraction);
-                            _notesForNextInteraction.Clear();
                         }
-                        await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
+                        else
+                        {
+                            var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
+                            var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
 
+                            ctx.Response.OnCompleted(() =>
+                            {
+                                _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
+                                return Task.CompletedTask;
+                            });
+                            List<IInteraction.Note> notes;
+                            lock (_notesForNextInteraction)
+                            {
+                                notes = new List<IInteraction.Note>(_notesForNextInteraction);
+                                _notesForNextInteraction.Clear();
+                            }
+                            await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
+
+                        }
                         await ctx.Response.CompleteAsync();
                     });
-                });
-                webBuilder.ConfigureServices(app => 
-                {
-                    app.AddCors(c =>  c.AddDefaultPolicy(c => c.AllowAnyOrigin()));
                 });
 
             }).Build();

@@ -9,14 +9,13 @@
   },
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "commandLineArgs": "playback"
-    },
-    "Kestrel": {
+    "Record": {
       "commandName": "Project",
-      "commandLineArgs": "playback",
-      "applicationUrl": "http://localhost:5000"
+      "commandLineArgs": "record http://todo-backend-sinatra.herokuapp.com http://localhost:1234 --urls=http://*:1234"
+    },
+    "Playback": {
+      "commandName": "Project",
+      "commandLineArgs": "playback http://todo-backend-sinatra.herokuapp.com http://localhost:1234 --urls=http://*:1234"
     }
   }
 }

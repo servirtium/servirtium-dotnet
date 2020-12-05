@@ -12,7 +12,7 @@ namespace Servirtium.Core.Interactions
         private readonly ILogger<TextAndBinaryBodyFormatter> _logger;
         
         //Logic copied from https://github.com/servirtium/servirtium-java/blob/master/core/src/main/java/com/paulhammant/servirtium/ServirtiumServer.java
-        private static bool IsTextMediaType(MediaTypeHeaderValue mediaType)=> mediaType.MediaType.StartsWith("text/") ||
+        public static bool IsTextMediaType(MediaTypeHeaderValue mediaType)=> mediaType.MediaType.StartsWith("text/") ||
                 mediaType.MediaType.StartsWith("image/svg") ||
                 mediaType.MediaType.StartsWith("multipart/form-data") ||
                 mediaType.MediaType.StartsWith("application/json") ||

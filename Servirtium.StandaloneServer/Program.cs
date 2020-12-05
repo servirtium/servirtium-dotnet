@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Servirtium.AspNetCore;
+using Servirtium.Core;
 using Servirtium.Core.Http;
 using Servirtium.Core.Interactions;
 
@@ -17,6 +18,7 @@ namespace Servirtium.StandaloneServer
         public static void Main(string[] args)
         {
             var command = args[0].ToLower();
+            var sourceUrl = args[1];
             var scriptDirectory = Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
             var loggerFactory= LoggerFactory.Create((builder) =>
             {
@@ -51,10 +53,16 @@ namespace Servirtium.StandaloneServer
             var server = AspNetCoreServirtiumServer.WithCommandLineArgs(
                 args, 
                 monitor, 
-                new SimpleHttpMessageTransforms(
-                    new Uri("http://todo-backend-sinatra.herokuapp.com"),
-                    new Regex[] { },
-                    new[] { new Regex("Date:") }
+                new HttpMessageTransformPipeline(
+                    new SimpleHttpMessageTransforms(
+                        new Uri(sourceUrl),
+                        new Regex[] { },
+                        new[] { new Regex("Date:") }
+                    ),
+                    new FindAndReplaceHttpMessageTransforms(
+                        new[] {
+                            new RegexReplacement(new Regex(Regex.Escape(sourceUrl)), args[2], ReplacementContext.ResponseBody)
+                        })
                 ),
                 loggerFactory
             );
@@ -62,7 +70,6 @@ namespace Servirtium.StandaloneServer
             AppDomain.CurrentDomain.ProcessExit += (a, e) => server.Stop().Wait();
             Console.Read();
 
-            //Debugger.Launch();
             server.Stop().Wait();
         }
 

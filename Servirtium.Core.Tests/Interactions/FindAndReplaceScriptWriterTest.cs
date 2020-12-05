@@ -64,24 +64,24 @@ namespace Servirtium.Core.Tests.Interactions
             
         }
 
-        private static IEnumerable<FindAndReplaceScriptWriter.RegexReplacement> ApplesAndBananasReplacements(string eat, string apples, string bananas, 
-            FindAndReplaceScriptWriter.ReplacementContext ctx = (FindAndReplaceScriptWriter.ReplacementContext.RequestBody | FindAndReplaceScriptWriter.ReplacementContext.RequestHeader | FindAndReplaceScriptWriter.ReplacementContext.ResponseBody | FindAndReplaceScriptWriter.ReplacementContext.ResponseHeader) ) =>
+        private static IEnumerable<RegexReplacement> ApplesAndBananasReplacements(string eat, string apples, string bananas, 
+            ReplacementContext ctx = (ReplacementContext.RequestBody | ReplacementContext.RequestHeader | ReplacementContext.ResponseBody | ReplacementContext.ResponseHeader) ) =>
             new[]
             {
-                new FindAndReplaceScriptWriter.RegexReplacement(new Regex("eat"), eat, ctx),
-                new FindAndReplaceScriptWriter.RegexReplacement(new Regex("apples"), apples, ctx),
-                new FindAndReplaceScriptWriter.RegexReplacement(new Regex("bananas"), bananas, ctx)
+                new RegexReplacement(new Regex("eat"), eat, ctx),
+                new RegexReplacement(new Regex("apples"), apples, ctx),
+                new RegexReplacement(new Regex("bananas"), bananas, ctx)
             };
 
         //All the test cases for testing find & replace behaviours on a single interaction
         class SingleInteractionTestCases : TheoryData<IInteraction,
-            IEnumerable<FindAndReplaceScriptWriter.RegexReplacement>, IInteraction>
+            IEnumerable<RegexReplacement>, IInteraction>
         {
             public SingleInteractionTestCases()
             {
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    new FindAndReplaceScriptWriter.RegexReplacement[0],
+                    new RegexReplacement[0],
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
@@ -95,66 +95,66 @@ namespace Servirtium.Core.Tests.Interactions
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", FindAndReplaceScriptWriter.ReplacementContext.ResponseHeader),
+                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", ReplacementContext.ResponseHeader),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .ResponseHeaders(new[] {("response-n-eepples", "response-v-eepples"),("response-n-baneenees", "response-v-baneenees")})
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ite", "ipples", "bininis", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody),
+                    ApplesAndBananasReplacements("ite", "ipples", "bininis", ReplacementContext.ResponseBody),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .ResponseBody("You like to ite, ite, ite bininis and ipples", MediaTypeHeaderValue.Parse("application/xml"))
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ote", "opples", "bononos", FindAndReplaceScriptWriter.ReplacementContext.RequestHeader),
+                    ApplesAndBananasReplacements("ote", "opples", "bononos", ReplacementContext.RequestHeader),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .RequestHeaders(new[] {("request-n-opples", "request-v-opples"),("request-n-bononos", "request-v-bononos")})
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ute", "upples", "bununus", FindAndReplaceScriptWriter.ReplacementContext.RequestBody),
+                    ApplesAndBananasReplacements("ute", "upples", "bununus", ReplacementContext.RequestBody),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .RequestBody("I like to ute, ute, ute upples and bununus", MediaTypeHeaderValue.Parse("application/json"))
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ate", "aypples", "banaynays", FindAndReplaceScriptWriter.ReplacementContext.None),
+                    ApplesAndBananasReplacements("ate", "aypples", "banaynays", ReplacementContext.None),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ute", "upples", "bununus", FindAndReplaceScriptWriter.ReplacementContext.RequestBody | FindAndReplaceScriptWriter.ReplacementContext.ResponseBody),
+                    ApplesAndBananasReplacements("ute", "upples", "bununus", ReplacementContext.RequestBody | ReplacementContext.ResponseBody),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .RequestBody("I like to ute, ute, ute upples and bununus", MediaTypeHeaderValue.Parse("application/json"))
                         .ResponseBody("You like to ute, ute, ute bununus and upples", MediaTypeHeaderValue.Parse("application/xml"))
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("ute", "upples", "bununus", FindAndReplaceScriptWriter.ReplacementContext.RequestBody)
-                        .Concat(ApplesAndBananasReplacements("eet", "eepples", "baneenees", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody)),
+                    ApplesAndBananasReplacements("ute", "upples", "bununus", ReplacementContext.RequestBody)
+                        .Concat(ApplesAndBananasReplacements("eet", "eepples", "baneenees", ReplacementContext.ResponseBody)),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .RequestBody("I like to ute, ute, ute upples and bununus", MediaTypeHeaderValue.Parse("application/json"))
                         .ResponseBody("You like to eet, eet, eet baneenees and eepples", MediaTypeHeaderValue.Parse("application/xml"))
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    new [] { new FindAndReplaceScriptWriter.RegexReplacement(new Regex(@"apples(\s*):(\s*)re"), "grapefruits: roo")},
+                    new [] { new RegexReplacement(new Regex(@"apples(\s*):(\s*)re"), "grapefruits: roo")},
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .RequestHeaders(new[] {("request-n-grapefruits", "rooquest-v-apples"),("request-n-bananas", "request-v-bananas")})
                         .ResponseHeaders(new[] {("response-n-grapefruits", "roosponse-v-apples"),("response-n-bananas", "response-v-bananas")})
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody)
-                        .Concat(ApplesAndBananasReplacements("ite", "ipples", "bininis", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody)),
+                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", ReplacementContext.ResponseBody)
+                        .Concat(ApplesAndBananasReplacements("ite", "ipples", "bininis", ReplacementContext.ResponseBody)),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .ResponseBody("You like to eet, eet, eet baneenees and eepples", MediaTypeHeaderValue.Parse("application/xml"))
                         .Build());
                 Add(new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .Build(),
-                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody)
-                        .Append(new FindAndReplaceScriptWriter.RegexReplacement(new Regex("eet"), "ite", FindAndReplaceScriptWriter.ReplacementContext.ResponseBody)),
+                    ApplesAndBananasReplacements("eet", "eepples", "baneenees", ReplacementContext.ResponseBody)
+                        .Append(new RegexReplacement(new Regex("eet"), "ite", ReplacementContext.ResponseBody)),
                     new ImmutableInteraction.Builder().From(BASE_INTERACTION)
                         .ResponseBody("You like to ite, ite, ite baneenees and eepples", MediaTypeHeaderValue.Parse("application/xml"))
                         .Build());
@@ -163,7 +163,7 @@ namespace Servirtium.Core.Tests.Interactions
 
         [ClassData(typeof(SingleInteractionTestCases))]
         [Theory]
-        public void Write_SingleInteraction_DelegatesToScriptWriterWithUpdatedInteraction(IInteraction input, IEnumerable<FindAndReplaceScriptWriter.RegexReplacement> replacements, IInteraction output)
+        public void Write_SingleInteraction_DelegatesToScriptWriterWithUpdatedInteraction(IInteraction input, IEnumerable<RegexReplacement> replacements, IInteraction output)
         {
             new FindAndReplaceScriptWriter(replacements, _mockScriptWriter.Object).Write(_mockTextWriter.Object, 
                 new Dictionary<int, IInteraction>{{666, input}});
@@ -179,9 +179,9 @@ namespace Servirtium.Core.Tests.Interactions
             new FindAndReplaceScriptWriter(
                 new []
                 {
-                    new FindAndReplaceScriptWriter.RegexReplacement(new Regex("banana"), "spider", FindAndReplaceScriptWriter.ReplacementContext.RequestBody),
-                    new FindAndReplaceScriptWriter.RegexReplacement(new Regex("tv show"), "movie", FindAndReplaceScriptWriter.ReplacementContext.RequestBody),
-                    new FindAndReplaceScriptWriter.RegexReplacement(new Regex("apples"), "cheese", FindAndReplaceScriptWriter.ReplacementContext.RequestBody),
+                    new RegexReplacement(new Regex("banana"), "spider", ReplacementContext.RequestBody),
+                    new RegexReplacement(new Regex("tv show"), "movie", ReplacementContext.RequestBody),
+                    new RegexReplacement(new Regex("apples"), "cheese", ReplacementContext.RequestBody),
                 }, _mockScriptWriter.Object).Write(_mockTextWriter.Object, 
                 new Dictionary<int, IInteraction>
                 {

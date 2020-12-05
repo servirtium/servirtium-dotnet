@@ -17,12 +17,12 @@ if len(sys.argv) > 1:
        # TODO check that .NET process is already started.
        url = "http://localhost:1234"
        with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "http://todo-backend-sinatra.herokuapp.com", "http://localhost:1234", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
        print(".NET record process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "playback":
        url = "http://localhost:1234"
        with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "http://todo-backend-sinatra.herokuapp.com", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
        print(".NET playback process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "direct":
        print("showing reference Sinatra app online without Servirtium in the middle")
@@ -38,13 +38,24 @@ chrome_options = webdriver.ChromeOptions()
 #chrome_options.add_argument("--proxy-server=%s" % "localhost:1234")
 chrome_options.add_argument("--auto-open-devtools-for-tabs")
 
-chrome = webdriver.Chrome(executable_path="D:/Tools/chromedriver.exe", options=chrome_options)
+chromeWebDriverExePath = None
+
+scriptArgs = sys.argv
+
+for arg in scriptArgs[2:]:
+    if arg.startswith("chromedriver="):
+        chromeWebDriverExePath=arg[len("chromedriver="):]
+if chromeWebDriverExePath is not None:
+    chrome = webdriver.Chrome(executable_path=chromeWebDriverExePath, options=chrome_options)
+else:
+    chrome = webdriver.Chrome(options=chrome_options)
+    
 # url = "http://todo-backend-sinatra.herokuapp.com"
 # time.sleep(5)
 
 chrome.get("http://www.todobackend.com/specs/index.html?" + url + "/todos")
 try:
-    element = WebDriverWait(chrome, 300).until(
+    element = WebDriverWait(chrome, 20).until(
         EC.text_to_be_present_in_element((By.CLASS_NAME, "passes"), "16")
     )
     print("Compatibility suite: all 16 tests passed")
