@@ -58,16 +58,6 @@ namespace Servirtium.AspNetCore
 
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
             {
-                webBuilder.ConfigureServices(app =>
-                {
-                    
-                    app.AddCors(c => c.AddDefaultPolicy(c => { 
-                        c.AllowAnyOrigin();
-                        c.AllowAnyMethod();
-                        c.AllowAnyHeader();
-                        c.AllowCredentials();
-                    }));
-                });
                 if (port != null)
                 {
                     //If a port is specified, override urls with specified port, listening on all available hosts, for HTTP.
