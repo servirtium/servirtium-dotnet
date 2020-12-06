@@ -20,6 +20,7 @@ namespace Servirtium.Core.Http
             Body = body;
             StatusCode = statusCode;
         }
+
         public override bool Equals(object? obj)
         {
             return obj is ServiceResponse request &&
