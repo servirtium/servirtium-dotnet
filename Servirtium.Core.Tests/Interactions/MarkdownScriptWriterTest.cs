@@ -27,6 +27,8 @@ namespace Servirtium.Core.Tests.Interactions
     [Collection("Tests using markdown_conversations.")]
     public class MarkdownScriptWriterTest: IClassFixture<SampleFileLoader>
     {
+        private const string NEW_LINE_TOKEN = "{{NEW_LINE}}";
+
         private readonly SampleFileLoader _loader;
         public MarkdownScriptWriterTest(SampleFileLoader loader)
         {
@@ -51,7 +53,11 @@ namespace Servirtium.Core.Tests.Interactions
             var sampleText = _loader.scripts[scriptName];
             var interactionText = new StringBuilder();
             new MarkdownScriptWriter(settings).Write(new StringWriter(interactionText), interactions);
-            Assert.Equal(sampleText.Replace("\n", Environment.NewLine), interactionText.ToString());
+            Assert.Equal(sampleText
+                .Replace("\r\n", NEW_LINE_TOKEN)
+                .Replace("\n", NEW_LINE_TOKEN)
+                .Replace(NEW_LINE_TOKEN, Environment.NewLine), 
+                interactionText.ToString());
         }
 
         [Fact]

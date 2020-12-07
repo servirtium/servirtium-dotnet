@@ -148,13 +148,13 @@ namespace Servirtium.Core.Interactions
                         
                         
                         var requestBody = CodeBlockContents(match.Groups["requestBody"].Captures);
-                        if (match.Groups["requestContentType"].Success && requestBody.Any())
+                        if (match.Groups["requestContentType"].Success)
                         {
                             builder.RequestBody(requestBody, MediaTypeHeaderValue.Parse(match.Groups["requestContentType"].Value));
                         }
 
                         var responseBody = CodeBlockContents(match.Groups["responseBody"].Captures);
-                        if (match.Groups["responseContentType"].Success && responseBody.Any())
+                        if (match.Groups["responseContentType"].Success)
                         {
                             builder.ResponseBody(responseBody, MediaTypeHeaderValue.Parse(match.Groups["responseContentType"].Value));
                         }

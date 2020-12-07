@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using NewRegexReplacement = Servirtium.Core.RegexReplacement;
+using NewReplacementContext = Servirtium.Core.ReplacementContext;
 
 namespace Servirtium.Core.Interactions
 {
@@ -36,31 +38,18 @@ namespace Servirtium.Core.Interactions
             public ReplacementContext Context { get; }
         }
 
-        private readonly IEnumerable<RegexReplacement> _replacementsForRecording;
+        private readonly IEnumerable<NewRegexReplacement> _replacementsForRecording;
 
         private readonly IScriptWriter _delegateScriptWriter;
 
-        private static string FixStringForRecording(string input, IEnumerable<RegexReplacement> regexReplacements)
-        {
-            var output = input;
-            foreach (var regexReplacement in regexReplacements)
-            {
-                output = regexReplacement.Matcher.Replace(output, regexReplacement.Replacement);
-            }
-            return output;
-        }
-
-        private static (string, string) FixHeaderForRecording((string, string) input, IEnumerable<RegexReplacement> regexReplacements)
-        {
-            (string name, string val) = input;
-            var fixedHeaderText = FixStringForRecording($"{name}: {val}", regexReplacements);
-            var headerBits = fixedHeaderText.Split(": ", 2);
-            return (headerBits[0], headerBits[1]);
-        }
-
         private readonly ILogger<FindAndReplaceScriptWriter> _logger;
 
+        [Obsolete("Use top level RegexReplacement struct instead")]
         public FindAndReplaceScriptWriter(IEnumerable<RegexReplacement> replacementsForRecording, IScriptWriter delegateScriptWriter, ILoggerFactory? loggerFactory = null)
+            :this(replacementsForRecording.Select(rr => new NewRegexReplacement(rr.Matcher, rr.Replacement, (NewReplacementContext)rr.Context)), delegateScriptWriter, loggerFactory)
+        { }
+
+        public FindAndReplaceScriptWriter(IEnumerable<NewRegexReplacement> replacementsForRecording, IScriptWriter delegateScriptWriter, ILoggerFactory? loggerFactory = null)
         {
             _logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger<FindAndReplaceScriptWriter>();
             _replacementsForRecording = replacementsForRecording;
@@ -74,11 +63,9 @@ namespace Servirtium.Core.Interactions
             {
                 var interaction = kvp.Value;
                 var updatedRequestHeaders = interaction.RequestHeaders
-                    .Select(h => FixHeaderForRecording(h, _replacementsForRecording
-                            .Where(rr => (rr.Context & ReplacementContext.RequestHeader) == ReplacementContext.RequestHeader)));
+                    .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.RequestHeader));
                 var updatedResponseHeaders = interaction.ResponseHeaders
-                    .Select(h => FixHeaderForRecording(h, _replacementsForRecording
-                            .Where(rr => (rr.Context & ReplacementContext.ResponseHeader) == ReplacementContext.ResponseHeader)));
+                    .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.ResponseHeader));
                 var builder = new ImmutableInteraction.Builder()
                     .From(interaction)
                     .RequestHeaders(updatedRequestHeaders)
@@ -86,14 +73,12 @@ namespace Servirtium.Core.Interactions
                 if (interaction.RequestBody.HasValue)
                 {
                     var (content, type) = interaction.RequestBody.Value;
-                    builder.RequestBody(FixStringForRecording(content, _replacementsForRecording
-                            .Where(rr => (rr.Context & ReplacementContext.RequestBody) == ReplacementContext.RequestBody)), type);
+                    builder.RequestBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.RequestBody), type);
                 }
                 if (interaction.ResponseBody.HasValue)
                 {
                     var (content, type) = interaction.ResponseBody.Value;
-                    builder.ResponseBody(FixStringForRecording(content, _replacementsForRecording
-                        .Where(rr => (rr.Context & ReplacementContext.ResponseBody) == ReplacementContext.ResponseBody)), type);
+                    builder.ResponseBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.ResponseBody), type);
                 }
 
                 var transformed = (IInteraction)builder.Build();

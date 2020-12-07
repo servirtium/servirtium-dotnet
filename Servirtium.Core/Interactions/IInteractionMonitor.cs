@@ -16,9 +16,5 @@ namespace Servirtium.Core.Interactions
 
         void NoteCompletedInteraction(int interactionNumber, IRequestMessage request, IResponseMessage responseFromService, IEnumerable<IInteraction.Note> notes) { }
 
-        void CodeNoteForNextInteraction(String title, String multiline) { }
-
-        void NoteForNextInteraction(String title, String multiline) { }
-
     }
 }

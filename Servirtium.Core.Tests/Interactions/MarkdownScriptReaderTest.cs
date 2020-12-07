@@ -221,7 +221,7 @@ namespace Servirtium.Core.Tests.Interactions
             Assert.Equal(@"Lots of
 noteworthy things
 to be
-noting.".Replace("\r\n","\n"), note.Content);
+noting.", note.Content);
         }
 
         [Fact]
@@ -240,7 +240,7 @@ noting.".Replace("\r\n","\n"), note.Content);
             Assert.Equal(@"Lots of
 noteworthy code
 to be
-running.".Replace("\r\n", "\n"), note.Content);
+running.", note.Content);
         }
 
 
@@ -262,21 +262,21 @@ running.".Replace("\r\n", "\n"), note.Content);
             Assert.Equal(@"Lots of
 noteworthy things
 to be
-noting.".Replace("\r\n", "\n"), note.Content);
+noting.", note.Content);
             note = interaction.Notes.ElementAt(1);
             Assert.Equal(IInteraction.Note.NoteType.Code, note.Type);
             Assert.Equal("A Code Note", note.Title);
             Assert.Equal(@"Lots of
 noteworthy code
 to be
-running.".Replace("\r\n", "\n"), note.Content);
+running.", note.Content);
             note = interaction.Notes.Last();
             Assert.Equal(IInteraction.Note.NoteType.Text, note.Type);
             Assert.Equal("Another Note", note.Title);
             Assert.Equal(@"Even more
 noteworthy things
 to be
-noting.".Replace("\r\n", "\n"), note.Content);
+noting.", note.Content);
         }
 
 
