@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>Servirtium.StandaloneServer</PackageId>
+    <VersionPrefix>1.1.0</VersionPrefix>
+    <VersionSuffix>dev.1</VersionSuffix>
+    <PackageProjectUrl>https://github.com/servirtium/servirtium-dotnet</PackageProjectUrl>
+    <Nullable>enable</Nullable>
+    <Authors>Stephen Hand</Authors>
+    <Company />
+    <Product>Servirtium</Product>
+    <Description>.NET Core Servirtium standalone server executable using a self hosted ASP.NET Kestrel server. Only supports web server configuration options and basic Servirtium configuation options, i.e. target site. It uses a basic 'one size fits all' recording configuration - for more sophisticated use cases, run Servirtium in your test process or host it in your own server.</Description>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

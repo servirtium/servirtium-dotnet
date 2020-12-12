@@ -46,14 +46,6 @@ namespace Servirtium.AspNetCore
             _logger = loggerFactory.CreateLogger<AspNetCoreServirtiumServer>();
             _logger.LogInformation("Starting AspNetCoreServirtiumServer");
             var envs = Environment.GetEnvironmentVariables();
-            _logger.LogDebug($"Environment variables:");
-            foreach(var key in envs.Keys)
-            {
-                if (key!=null)
-                {
-                    _logger.LogDebug($"{key} = {envs[key]}");
-                }
-            }
             _servirtiumRequestHandler = servirtiumHandler;
 
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>

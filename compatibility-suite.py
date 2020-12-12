@@ -9,20 +9,31 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 import subprocess
 import time
+import argparse
+
+parser = argparse.ArgumentParser(description='Run Servirtium.NET.')
+parser.add_argument("mode", help="Servirtium's mode of operation, i.e. recording a new script or playing an existing one back", choices = ["record", "playback", "direct"])
+parser.add_argument("-p", "--port", help="The port Servirtium will run on", type=int, default=1234)
+parser.add_argument("-d", "--chromedriver", help="The location of the Selenium Chrome Webdriver executable - omit to use one that's on the system PATH")
+
+args = parser.parse_args()
 
 dotnet_process = None
-# os.environ["HTTP_PROXY"] = "http://localhost:1234"
+# os.environ["HTTP_PROXY"] = "http://localhost:%s" %(args.port)
+
+subprocess.call(["dotnet", "build", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj"])
+
 if len(sys.argv) > 1:
    if sys.argv[1] == "record":
        # TODO check that .NET process is already started.
-       url = "http://localhost:1234"
+       url = "http://localhost:%s" %(args.port)
        with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "http://todo-backend-sinatra.herokuapp.com", "http://localhost:1234", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "record", "http://todo-backend-sinatra.herokuapp.com", "http://localhost:%s" %(args.port), "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
        print(".NET record process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "playback":
-       url = "http://localhost:1234"
+       url = "http://localhost:%s" %(args.port)
        with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "http://todo-backend-sinatra.herokuapp.com", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
+           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "playback", "http://todo-backend-sinatra.herokuapp.com", "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
        print(".NET playback process: "+str(dotnet_process.pid))
    elif sys.argv[1] == "direct":
        print("showing reference Sinatra app online without Servirtium in the middle")
@@ -35,18 +46,12 @@ else:
    exit(10)
 
 chrome_options = webdriver.ChromeOptions()
-#chrome_options.add_argument("--proxy-server=%s" % "localhost:1234")
+#chrome_options.add_argument("--proxy-server=%s" % "localhost:%s" %(args.port))
 chrome_options.add_argument("--auto-open-devtools-for-tabs")
 
-chromeWebDriverExePath = None
 
-scriptArgs = sys.argv
-
-for arg in scriptArgs[2:]:
-    if arg.startswith("chromedriver="):
-        chromeWebDriverExePath=arg[len("chromedriver="):]
-if chromeWebDriverExePath is not None:
-    chrome = webdriver.Chrome(executable_path=chromeWebDriverExePath, options=chrome_options)
+if args.chromedriver:
+    chrome = webdriver.Chrome(executable_path=args.chromedriver, options=chrome_options)
 else:
     chrome = webdriver.Chrome(options=chrome_options)
     
