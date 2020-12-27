@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -46,14 +47,6 @@ namespace Servirtium.AspNetCore
             _logger = loggerFactory.CreateLogger<AspNetCoreServirtiumServer>();
             _logger.LogInformation("Starting AspNetCoreServirtiumServer");
             var envs = Environment.GetEnvironmentVariables();
-            _logger.LogDebug($"Environment variables:");
-            foreach(var key in envs.Keys)
-            {
-                if (key!=null)
-                {
-                    _logger.LogDebug($"{key} = {envs[key]}");
-                }
-            }
             _servirtiumRequestHandler = servirtiumHandler;
 
             _host = hostBuilder.ConfigureWebHostDefaults(webBuilder =>
@@ -68,33 +61,46 @@ namespace Servirtium.AspNetCore
                     var handler = new AspNetCoreServirtiumRequestHandler(servirtiumHandler, loggerFactory);
                     app.Run(async ctx =>
                     {
-                        if (HttpMethods.IsOptions(ctx.Request.Method))
+                        try
                         {
-                            //Kill CORS in the face, bypass any Servirtium logic.
-                            ctx.Response.Headers.Append("Access-Control-Allow-Origin", new StringValues("*"));
-                            ctx.Response.Headers.Append("Access-Control-Allow-Methods", new StringValues("*"));
-                            ctx.Response.Headers.Append("Access-Control-Allow-Headers", new StringValues("*"));
-                            ctx.Response.Headers.Append("Access-Control-Allow-Credentials", new StringValues(new string[] { "true", ctx.Request.Host.Value }));
-                            ctx.Response.Headers.Append("Access-Control-Max-Age", new StringValues("864000"));
+                            if (HttpMethods.IsOptions(ctx.Request.Method))
+                            {
+                                //Kill CORS in the face, bypass any Servirtium logic.
+                                ctx.Response.Headers.Append("Access-Control-Allow-Origin", new StringValues("*"));
+                                ctx.Response.Headers.Append("Access-Control-Allow-Methods", new StringValues("*"));
+                                ctx.Response.Headers.Append("Access-Control-Allow-Headers", new StringValues("*"));
+                                ctx.Response.Headers.Append("Access-Control-Allow-Credentials", new StringValues(new string[] { "true", ctx.Request.Host.Value }));
+                                ctx.Response.Headers.Append("Access-Control-Max-Age", new StringValues("864000"));
+
+                            }
+                            else
+                            {
+                                var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
+                                var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
+
+                                ctx.Response.OnCompleted(() =>
+                                {
+                                    _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
+                                    return Task.CompletedTask;
+                                });
+                                List<IInteraction.Note> notes;
+                                lock (_notesForNextInteraction)
+                                {
+                                    notes = new List<IInteraction.Note>(_notesForNextInteraction);
+                                    _notesForNextInteraction.Clear();
+                                }
+                                await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
+
+                            }
 
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                            var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
-
-                            ctx.Response.OnCompleted(() =>
-                            {
-                                _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
-                                return Task.CompletedTask;
-                            });
-                            List<IInteraction.Note> notes;
-                            lock (_notesForNextInteraction)
-                            {
-                                notes = new List<IInteraction.Note>(_notesForNextInteraction);
-                                _notesForNextInteraction.Clear();
-                            }
-                            await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
+                            ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                            await ctx.Response.WriteAsync(
+@$"{ex.Message}
+{ex.Source}
+{ex.StackTrace}");
 
                         }
                         await ctx.Response.CompleteAsync();

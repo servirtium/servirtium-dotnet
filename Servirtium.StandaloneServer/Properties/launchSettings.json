@@ -15,7 +15,7 @@
     },
     "Playback": {
       "commandName": "Project",
-      "commandLineArgs": "playback http://todo-backend-sinatra.herokuapp.com http://localhost:1234 --urls=http://*:1234"
+      "commandLineArgs": "record https://todo-backend-clojure.herokuapp.com http://localhost:61417 --urls=http://*:61417"
     }
   }
 }

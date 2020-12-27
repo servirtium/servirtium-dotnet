@@ -9,53 +9,55 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 import subprocess
 import time
+import argparse
+
+parser = argparse.ArgumentParser(description='Run Servirtium.NET.')
+parser.add_argument("mode", help="Servirtium's mode of operation, i.e. recording a new script or playing an existing one back", choices = ["record", "playback", "direct"])
+parser.add_argument("-p", "--port", help="The port Servirtium will run on", type=int, default=1234)
+parser.add_argument("-d", "--chromedriver", help="The location of the Selenium Chrome Webdriver executable - omit to use one that's on the system PATH")
+parser.add_argument("-t", "--testpage", help="The page to point chrome at to run the tests, use the '%%s' token where the port should be specified. To point back at the original todobackend, specify http://www.todobackend.com/specs/index.html?http://localhost:%%s/todos", default="https://servirtium.github.io/compatibility-suite/#port=%s")
+parser.add_argument("--backend", help="The real todo backend implementation, only used in 'record' or 'direct' mode", default="http://todo-backend-sinatra.herokuapp.com")
+parser.add_argument("--timeoutseconds", help="Number of seconds to wait before giving up on a successful run and ending the test run", type=int, default=20)
+
+args = parser.parse_args()
 
 dotnet_process = None
-# os.environ["HTTP_PROXY"] = "http://localhost:1234"
-if len(sys.argv) > 1:
-   if sys.argv[1] == "record":
-       # TODO check that .NET process is already started.
-       url = "http://localhost:1234"
-       with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "record", "http://todo-backend-sinatra.herokuapp.com", "http://localhost:1234", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
-       print(".NET record process: "+str(dotnet_process.pid))
-   elif sys.argv[1] == "playback":
-       url = "http://localhost:1234"
-       with open('myfile', "w") as outfile:
-           dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--", "playback", "http://todo-backend-sinatra.herokuapp.com", "--urls=http://*:1234"], stdout = outfile, stdin = subprocess.PIPE)
-       print(".NET playback process: "+str(dotnet_process.pid))
-   elif sys.argv[1] == "direct":
-       print("showing reference Sinatra app online without Servirtium in the middle")
-       url = "https://todo-backend-sinatra.herokuapp.com"
-   else:
-       print("Second arg should be record or playback")
-       exit(10)
+# os.environ["HTTP_PROXY"] = "http://localhost:%s" %(args.port)
+
+#Build the Servirtium server first if required
+subprocess.call(["dotnet", "build", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj"])
+browser_url = args.testpage %(args.port)
+
+if args.mode == "record":
+    # TODO check that .NET process is already started.
+    with open('myfile', "w") as outfile:
+        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "record", args.backend, "http://localhost:%s" %(args.port), "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
+    print(".NET record process: "+str(dotnet_process.pid))
+elif args.mode == "playback":
+    with open('myfile', "w") as outfile:
+        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "playback", args.backend, "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
+    print(".NET playback process: "+str(dotnet_process.pid))
+elif args.mode == "direct":
+    print("showing reference Sinatra app online without Servirtium in the middle")
+    browser_url = "http://www.todobackend.com/specs/index.html?%s" %(args.backend)
 else:
-   print("record/playback/direct argument needed")
-   exit(10)
+    print("Second arg should be record or playback")
+    exit(10)
 
 chrome_options = webdriver.ChromeOptions()
-#chrome_options.add_argument("--proxy-server=%s" % "localhost:1234")
+#chrome_options.add_argument("--proxy-server=%s" % "localhost:%s" %(args.port))
 chrome_options.add_argument("--auto-open-devtools-for-tabs")
 
-chromeWebDriverExePath = None
 
-scriptArgs = sys.argv
-
-for arg in scriptArgs[2:]:
-    if arg.startswith("chromedriver="):
-        chromeWebDriverExePath=arg[len("chromedriver="):]
-if chromeWebDriverExePath is not None:
-    chrome = webdriver.Chrome(executable_path=chromeWebDriverExePath, options=chrome_options)
+if args.chromedriver:
+    chrome = webdriver.Chrome(executable_path=args.chromedriver, options=chrome_options)
 else:
     chrome = webdriver.Chrome(options=chrome_options)
-    
-# url = "http://todo-backend-sinatra.herokuapp.com"
-# time.sleep(5)
 
-chrome.get("http://www.todobackend.com/specs/index.html?" + url + "/todos")
+
+chrome.get(browser_url)
 try:
-    element = WebDriverWait(chrome, 20).until(
+    element = WebDriverWait(chrome, args.timeoutseconds).until(
         EC.text_to_be_present_in_element((By.CLASS_NAME, "passes"), "16")
     )
     print("Compatibility suite: all 16 tests passed")
@@ -65,7 +67,7 @@ except TimeoutException as ex:
 
 # TODO warn that .NET process was not started.
 
-print("mode: " + sys.argv[1])
+print("mode: " + args.mode)
 
 
 if dotnet_process is not None:
