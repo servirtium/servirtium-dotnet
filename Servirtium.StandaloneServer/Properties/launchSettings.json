@@ -11,7 +11,7 @@
   "profiles": {
     "Record": {
       "commandName": "Project",
-      "commandLineArgs": "record http://todo-backend-sinatra.herokuapp.com http://localhost:1234 --urls=http://*:1234"
+      "commandLineArgs": "record http://todo-backend-sinatra.herokuapp.com 61417"
     },
     "Playback": {
       "commandName": "Project",

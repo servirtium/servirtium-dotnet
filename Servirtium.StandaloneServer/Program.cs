@@ -17,6 +17,7 @@ namespace Servirtium.StandaloneServer
 
         public static void Main(string[] args)
         {
+            var port = args.Length > 2 ? ushort.Parse(args[2]) : (ushort)1234;
             var command = args[0].ToLower();
             var sourceUrl = args[1];
             var scriptDirectory = Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
@@ -56,7 +57,7 @@ namespace Servirtium.StandaloneServer
                     throw new ArgumentException($"Unsupported command: '{command}', supported commands are 'playback' and 'record'.");
             };
             var server = AspNetCoreServirtiumServer.WithCommandLineArgs(
-                args, 
+                args.Append($"--urls=http://*:{port}").ToArray(), 
                 monitor, 
                 new HttpMessageTransformPipeline(
                     new SimpleHttpMessageTransforms(
@@ -67,7 +68,7 @@ namespace Servirtium.StandaloneServer
                     ),
                     new FindAndReplaceHttpMessageTransforms(
                         new[] {
-                            new RegexReplacement(new Regex(Regex.Escape(sourceUrl)), args[2], ReplacementContext.ResponseBody)
+                            new RegexReplacement(new Regex(Regex.Escape(sourceUrl)), $"http://localhost:{port}", ReplacementContext.ResponseBody)
                         }, loggerFactory)
                 ),
                 loggerFactory

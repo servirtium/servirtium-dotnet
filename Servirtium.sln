@@ -21,6 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Servirtium.StandaloneServer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Servirtium.AspNetCore.Tests", "Servirtium.AspNetCore.Tests\Servirtium.AspNetCore.Tests.csproj", "{7C2DCE46-2A2D-4149-B3CF-7FE31260BE94}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{AC5600F5-24EA-4963-B1FE-8BAE31704408}"
+	ProjectSection(SolutionItems) = preProject
+		entrypoint.sh = entrypoint.sh
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +55,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AC5600F5-24EA-4963-B1FE-8BAE31704408} = {70C121B4-5E08-46A6-ACE2-7B2C63D78333}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {99E46C9B-C952-4A24-B3CB-DE1B9091BE26}

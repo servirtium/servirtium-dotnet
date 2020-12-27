@@ -31,11 +31,11 @@ browser_url = args.testpage %(args.port)
 if args.mode == "record":
     # TODO check that .NET process is already started.
     with open('compatibility_suite_servirtium_server.record.log', "w") as outfile:
-        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "record", args.backend, "http://localhost:%s" %(args.port), "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
+        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "record", args.backend, str(args.port)], stdout = outfile, stdin = subprocess.PIPE)
     print(".NET record process: "+str(dotnet_process.pid))
 elif args.mode == "playback":
     with open('compatibility_suite_servirtium_server.playback.log', "w") as outfile:
-        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "playback", args.backend, "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
+        dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "playback", args.backend, str(args.port)], stdout = outfile, stdin = subprocess.PIPE)
     print(".NET playback process: "+str(dotnet_process.pid))
 elif args.mode == "direct":
     print("showing reference Sinatra app online without Servirtium in the middle")
@@ -72,7 +72,7 @@ print("mode: " + args.mode)
 
 if dotnet_process is not None:
     print("Killing Servirtium.NET")
-    dotnet_process.communicate(input="x".encode("utf-8"))
+    dotnet_process.communicate(input="\nexit\n".encode("utf-8"))
 
 print("Closing Selenium")
 chrome.quit()
