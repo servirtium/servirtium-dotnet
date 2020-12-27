@@ -26,6 +26,7 @@ namespace Servirtium.StandaloneServer
                     .AddFilter(level => true)
                     .AddConsole();
             });
+            var logger = loggerFactory.CreateLogger<Program>();
             IInteractionMonitor monitor;
             switch (command)
             {
@@ -71,10 +72,15 @@ namespace Servirtium.StandaloneServer
                 ),
                 loggerFactory
             );
+            logger.LogInformation("Starting up Servirtium Standalone Server.");
             server.Start().Wait();
-            AppDomain.CurrentDomain.ProcessExit += (a, e) => server.Stop().Wait();
-            Console.Read();
-
+            AppDomain.CurrentDomain.ProcessExit += (a, e) =>
+            {
+                logger.LogInformation("Servirtium Standalone Server attempted graceful shutdown.");
+                server.Stop().Wait();
+            };
+            while (Console.ReadLine()?.ToLower() != "exit") { }
+            logger.LogDebug("Servirtium Standalone Server received 'exit' command, shutting down.");
             server.Stop().Wait();
         }
 
