@@ -221,7 +221,7 @@ namespace Servirtium.Core.Tests.Interactions
                 .Build();
 
             var interactionText = new StringBuilder();
-            Assert.Throws<ArgumentException>(()=>new MarkdownScriptWriter().Write(new StringWriter(interactionText), interactions));
+            Assert.Throws<MissingInteractionException>(()=>new MarkdownScriptWriter().Write(new StringWriter(interactionText), interactions));
         }
 
 

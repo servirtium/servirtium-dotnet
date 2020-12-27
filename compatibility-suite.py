@@ -30,11 +30,11 @@ browser_url = args.testpage %(args.port)
 
 if args.mode == "record":
     # TODO check that .NET process is already started.
-    with open('myfile', "w") as outfile:
+    with open('compatibility_suite_servirtium_server.record.log', "w") as outfile:
         dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "record", args.backend, "http://localhost:%s" %(args.port), "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
     print(".NET record process: "+str(dotnet_process.pid))
 elif args.mode == "playback":
-    with open('myfile', "w") as outfile:
+    with open('compatibility_suite_servirtium_server.playback.log', "w") as outfile:
         dotnet_process = subprocess.Popen(["dotnet", "run", "--project", "./Servirtium.StandaloneServer/Servirtium.StandaloneServer.csproj", "--no-build", "--", "playback", args.backend, "--urls=http://*:%s" %(args.port)], stdout = outfile, stdin = subprocess.PIPE)
     print(".NET playback process: "+str(dotnet_process.pid))
 elif args.mode == "direct":

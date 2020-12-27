@@ -43,9 +43,11 @@ namespace Servirtium.StandaloneServer
                     {
                         monitor = new InteractionRecorder(
                             Path.Combine(RECORDING_OUTPUT_DIRECTORY, $"recording_{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.md"),
-                            new MarkdownScriptWriter(), 
+                            new MarkdownScriptWriter(null, loggerFactory), 
                             false,
-                            loggerFactory
+                            loggerFactory,
+                            //Write each interaction after it completes rather than all at the end, so it isn't disrupted by unceremonious teardowns (like via a docker container stopping).
+                            InteractionRecorder.RecordTime.AfterEachInteraction
                         );
                         break;
                     }
@@ -59,12 +61,13 @@ namespace Servirtium.StandaloneServer
                     new SimpleHttpMessageTransforms(
                         new Uri(sourceUrl),
                         new Regex[] { },
-                        new[] { new Regex("Date:") }
+                        new[] { new Regex("Date:") },
+                        loggerFactory
                     ),
                     new FindAndReplaceHttpMessageTransforms(
                         new[] {
                             new RegexReplacement(new Regex(Regex.Escape(sourceUrl)), args[2], ReplacementContext.ResponseBody)
-                        })
+                        }, loggerFactory)
                 ),
                 loggerFactory
             );
