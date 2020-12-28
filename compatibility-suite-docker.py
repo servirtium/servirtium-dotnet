@@ -29,10 +29,10 @@ docker_args = ["docker", "run", "-p", "%s:%s" %(str(args.port), str(args.port)),
 
 if args.mode == "record":
     # TODO check that .NET process is already started.
-    subprocess.Popen(docker_args + ["servirtium-dotnet-standalone-server", "record", args.backend, str(args.port)])
+    subprocess.call(docker_args + ["servirtium-dotnet-standalone-server", "record", args.backend, str(args.port)])
     print("Docker record container: servirtium-compatibility-test")
 elif args.mode == "playback":
-    subprocess.Popen(docker_args + [ "servirtium-dotnet-standalone-server", "playback", args.backend, str(args.port)])
+    subprocess.call(docker_args + [ "servirtium-dotnet-standalone-server", "playback", args.backend, str(args.port)])
     print("Docker playback container: servirtium-compatibility-test")
 elif args.mode == "direct":
     print("showing reference Sinatra app online without Servirtium in the middle")
