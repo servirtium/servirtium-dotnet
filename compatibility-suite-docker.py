@@ -68,7 +68,7 @@ print("mode: " + args.mode)
 
 
 print("Killing Servirtium.NET")
-subprocess.Popen(["docker", "stop", "servirtium-compatibility-test"])
+subprocess.call(["docker", "stop", "servirtium-compatibility-test"])
 
 print("Closing Selenium")
 chrome.quit()
