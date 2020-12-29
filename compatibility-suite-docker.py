@@ -13,7 +13,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Run Servirtium.NET.')
 parser.add_argument("mode", help="Servirtium's mode of operation, i.e. recording a new script or playing an existing one back", choices = ["record", "playback", "direct"])
-parser.add_argument("-p", "--port", help="The port Servirtium will run on", type=int, default=1234)
+parser.add_argument("-p", "--port", help="The port Servirtium will run on", type=int, default=61417)
 parser.add_argument("-d", "--chromedriver", help="The location of the Selenium Chrome Webdriver executable - omit to use one that's on the system PATH")
 parser.add_argument("-t", "--testpage", help="The page to point chrome at to run the tests, use the '%%s' token where the port should be specified. To point back at the original todobackend, specify http://www.todobackend.com/specs/index.html?http://localhost:%%s/todos", default="https://servirtium.github.io/compatibility-suite/index.html?http://localhost:%s/todos")
 parser.add_argument("--backend", help="The real todo backend implementation, only used in 'record' or 'direct' mode", default="http://todo-backend-sinatra.herokuapp.com")
@@ -24,8 +24,9 @@ args = parser.parse_args()
 browser_url = args.testpage %(args.port)
 
 subprocess.call(["docker", "volume", "create", "scripts"])
+subprocess.call(["docker", "rm", "servirtium-compatibility-test", "-f"])
 
-docker_args = ["docker", "run", "-p", "%s:%s" %(str(args.port), str(args.port)), "--volume", "scripts:/Servirtium/test_recording_output", "--name", "servirtium-compatibility-test", "--rm", "-d"]
+docker_args = ["docker", "run", "-p", "%s:%s" %(str(args.port), str(args.port)), "--volume", "scripts:/Servirtium/test_recording_output", "--name", "servirtium-compatibility-test", "-d"]
 
 if args.mode == "record":
     # TODO check that .NET process is already started.
