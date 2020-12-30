@@ -13,6 +13,7 @@ namespace Servirtium.Core.Interactions
 {
     public class MarkdownScriptWriter : IScriptWriter
     {
+
         public enum CodeblockDemarcation
         {
             TripleBacktick,
@@ -58,10 +59,11 @@ namespace Servirtium.Core.Interactions
 
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
-            int finalInteractionNumber = interactions.Keys.Any() ? interactions.Keys.Max() : -1;
-            _logger.LogDebug($"Recording {finalInteractionNumber+1} interactions");
+            (int start, int end) interactionBounds = interactions.Keys.Any() ? (interactions.Keys.Min(), interactions.Keys.Max()) : (0, -1);
+            int startInteractionNumber = interactions.Keys.Any() ? interactions.Keys.Max() : -1;
+            _logger.LogDebug($"Recording {interactionBounds.end+1} interactions");
             
-            for (var i = 0; i <= finalInteractionNumber; i++)
+            for (var i = interactionBounds.start; i <= interactionBounds.end; i++)
             {
                 if (interactions.TryGetValue(i, out var interaction))
                 {
@@ -69,32 +71,44 @@ namespace Servirtium.Core.Interactions
                     {
                         throw new ArgumentException($"Interaction at dictionary key '{i}' is number '{interaction.Number}'. The dictionary should always be keyed on the interaction's nuymber or it cannot be written.");
                     }
-                    var noteMarkdown = String.Join("", interaction.Notes.Select(n => {
-                        var noteContentHeader = n.Type == IInteraction.Note.NoteType.Code ? $"```{Environment.NewLine}" : "";
-                        var noteContentFooter = n.Type == IInteraction.Note.NoteType.Code ? $"{Environment.NewLine}```" : "";
-                        return $@"## [Note] {n.Title}:
+                    WriteInteraction(writer, interaction);
+                }
+                else
+                {
+                    throw new MissingInteractionException($"Interaction number {i} was missing (final interaction number: {interactionBounds.end}). The MarkdownScriptWriter requires a contiguously numbered set of interactions, starting at zero.", i);
+                }
+            }
+            _logger.LogInformation($"Recorded {interactionBounds.end + 1} interactions");
+        }
 
-{(n.Type == IInteraction.Note.NoteType.Code ? WrapInCodeBlock(n.Content): n.Content)}
+        private void WriteInteraction(TextWriter writer, IInteraction interaction)
+        {
+            var noteMarkdown = String.Join("", interaction.Notes.Select(n => {
+                var noteContentHeader = n.Type == IInteraction.Note.NoteType.Code ? $"```{Environment.NewLine}" : "";
+                var noteContentFooter = n.Type == IInteraction.Note.NoteType.Code ? $"{Environment.NewLine}```" : "";
+                return $@"## [Note] {n.Title}:
+
+{(n.Type == IInteraction.Note.NoteType.Code ? WrapInCodeBlock(n.Content) : n.Content)}
 
 ";
-                    }));
-                    string requestContent = "", requestType = "";
-                    if (interaction.RequestBody.HasValue)
-                    {
-                        var (content, type) = interaction.RequestBody.Value;
-                        requestContent = content;
-                        requestType = type.ToString();
-                    }
-                    string responseContent = "", responseType = "";
-                    if (interaction.ResponseBody.HasValue)
-                    {
-                        var (content, type) = interaction.ResponseBody.Value;
-                        responseContent = content;
-                        responseType = type.ToString();
-                    }
+            }));
+            string requestContent = "", requestType = "";
+            if (interaction.RequestBody.HasValue)
+            {
+                var (content, type) = interaction.RequestBody.Value;
+                requestContent = content;
+                requestType = type.ToString();
+            }
+            string responseContent = "", responseType = "";
+            if (interaction.ResponseBody.HasValue)
+            {
+                var (content, type) = interaction.ResponseBody.Value;
+                responseContent = content;
+                responseType = type.ToString();
+            }
 
-                    var httpMethodMarkdown = _settings.EmphasiseHttpVerbs ? $"*{interaction.Method}*" : interaction.Method.ToString();
-                    var markdown = $@"## Interaction {interaction.Number}: {httpMethodMarkdown} {interaction.Path}
+            var httpMethodMarkdown = _settings.EmphasiseHttpVerbs ? $"*{interaction.Method}*" : interaction.Method.ToString();
+            var markdown = $@"## Interaction {interaction.Number}: {httpMethodMarkdown} {interaction.Path}
 
 {noteMarkdown}### Request headers recorded for playback:
 
@@ -113,15 +127,9 @@ namespace Servirtium.Core.Interactions
 {WrapInCodeBlock(responseContent)}
 
 ";
-                    writer.Write(markdown);
-                    _logger.LogDebug($"Wrote interaction {i}, A {interaction.Method} request to {interaction.Path}, returning {interaction.StatusCode}{(interaction.Notes.Any() ? $", with {interaction.Notes.Count()} notes." : ".")}");
-                }
-                else
-                {
-                    throw new ArgumentException($"Interaction number {i} was missing (final interaction number: {finalInteractionNumber}). The MarkdownScriptWriter requires a contiguously numbered set of interactions, starting at zero.");
-                }
-            }
-            _logger.LogInformation($"Recorded {finalInteractionNumber+1} interactions");
+            writer.Write(markdown);
+            _logger.LogDebug($"Wrote interaction {interaction.Number}, A {interaction.Method} request to {interaction.Path}, returning {interaction.StatusCode}{(interaction.Notes.Any() ? $", with {interaction.Notes.Count()} notes." : ".")}");
+
         }
     }
 }

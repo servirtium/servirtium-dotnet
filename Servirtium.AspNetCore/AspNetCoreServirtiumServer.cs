@@ -23,6 +23,18 @@ namespace Servirtium.AspNetCore
 {
     public class AspNetCoreServirtiumServer : IServirtiumServer
     {
+        private enum State
+        {
+            Stopped,
+            Starting,
+            Running,
+            Stopping
+        }
+
+        private State _state = State.Stopped;
+
+        private readonly object _lock = new object();
+
         private readonly IHost _host;
 
         private readonly ILogger<AspNetCoreServirtiumServer> _logger;
@@ -113,17 +125,40 @@ namespace Servirtium.AspNetCore
 
         public async Task<IServirtiumServer> Start()
         {
+            lock(_lock)
+            {
+                if (_state != State.Stopped)
+                {
+                    _logger.LogDebug($"Attempted to start host that is already in a '{_state}' state.");
+                    return this;
+                }
+                _state = State.Starting;
+            }
+
             _logger.LogDebug($"Host starting.");
             await _host.StartAsync();
+            _state = State.Running;
             _logger.LogInformation($"Host successfully started.");
+
             return this;
         }
 
         public async Task Stop()
         {
+            lock (_lock)
+            {
+                if (_state != State.Running && _state != State.Starting)
+                {
+                    _logger.LogDebug($"Attempted to stop host that is already in a '{_state}' state.");
+                    return;
+                }
+                _state = State.Stopping;
+            }
+
             ((IServirtiumServer)this).FinishedScript();
             await _host.StopAsync();
             _host.Dispose();
+            _state = State.Stopped;
             _logger.LogInformation($"Host successfully stopped.");
             
         }

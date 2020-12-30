@@ -56,35 +56,36 @@ namespace Servirtium.Core.Interactions
             _delegateScriptWriter = delegateScriptWriter;
         }
 
+        private IInteraction TransformInteraction(IInteraction interaction)
+        {
+            var updatedRequestHeaders = interaction.RequestHeaders
+    .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.RequestHeader));
+            var updatedResponseHeaders = interaction.ResponseHeaders
+                .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.ResponseHeader));
+            var builder = new ImmutableInteraction.Builder()
+                .From(interaction)
+                .RequestHeaders(updatedRequestHeaders)
+                .ResponseHeaders(updatedResponseHeaders);
+            if (interaction.RequestBody.HasValue)
+            {
+                var (content, type) = interaction.RequestBody.Value;
+                builder.RequestBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.RequestBody), type);
+            }
+            if (interaction.ResponseBody.HasValue)
+            {
+                var (content, type) = interaction.ResponseBody.Value;
+                builder.ResponseBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.ResponseBody), type);
+            }
+
+            var transformed = (IInteraction)builder.Build();
+            _logger.LogDebug($"Performed find & replace sweep on interaction {transformed.Number}, a {interaction.Method} request to {transformed.Path} returning {transformed.StatusCode}.");
+            return transformed;
+        }
+
         public void Write(TextWriter writer, IDictionary<int, IInteraction> interactions)
         {
             _logger.LogDebug($"Performing find & replace sweep on {interactions.Count} interactions with {_replacementsForRecording.Count()} replacements.");
-            var interactionsToRecord = interactions.ToDictionary(kvp => kvp.Key, kvp =>
-            {
-                var interaction = kvp.Value;
-                var updatedRequestHeaders = interaction.RequestHeaders
-                    .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.RequestHeader));
-                var updatedResponseHeaders = interaction.ResponseHeaders
-                    .Select(h => NewRegexReplacement.FixHeaderForRecording(h, _replacementsForRecording, NewReplacementContext.ResponseHeader));
-                var builder = new ImmutableInteraction.Builder()
-                    .From(interaction)
-                    .RequestHeaders(updatedRequestHeaders)
-                    .ResponseHeaders(updatedResponseHeaders);
-                if (interaction.RequestBody.HasValue)
-                {
-                    var (content, type) = interaction.RequestBody.Value;
-                    builder.RequestBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.RequestBody), type);
-                }
-                if (interaction.ResponseBody.HasValue)
-                {
-                    var (content, type) = interaction.ResponseBody.Value;
-                    builder.ResponseBody(NewRegexReplacement.FixStringForRecording(content, _replacementsForRecording, NewReplacementContext.ResponseBody), type);
-                }
-
-                var transformed = (IInteraction)builder.Build();
-                _logger.LogDebug($"Performed find & replace sweep on interaction {transformed.Number}, a {interaction.Method} request to {transformed.Path} returning {transformed.StatusCode}.");
-                return transformed;
-            });
+            var interactionsToRecord = interactions.ToDictionary(kvp => kvp.Key, kvp => TransformInteraction(kvp.Value));
             _delegateScriptWriter.Write(writer, interactionsToRecord);
         }
     }
