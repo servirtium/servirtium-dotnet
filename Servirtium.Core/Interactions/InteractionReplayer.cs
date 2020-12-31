@@ -100,12 +100,14 @@ namespace Servirtium.Core.Interactions
         {
             //Validate the request is the same as it was when it was recorded
             var nextInteraction = _allInteractions[interactionNumber];
-
-            //Add the new interaction to a pending list then check if the request matches any current pending interactions
-            _pendingInteractions.Add(nextInteraction);
             IInteraction? matchedInteraction = null;
+            var tcs = new TaskCompletionSource<IInteraction>();
+            var requestAndTcs = (request, tcs);
+
             lock (_pendingInteractions)
             {
+                //Add the new interaction to a pending list then check if the request matches any current pending interactions
+                _pendingInteractions.Add(nextInteraction);
                 foreach (var pendingInteraction in _pendingInteractions)
                 {
                     var validationResult = ValidateRequest(request, pendingInteraction);
@@ -140,22 +142,25 @@ namespace Servirtium.Core.Interactions
                         }
                     }
                 }
+                _logger.LogDebug($"Request '{request.Method} {request.Url}' not matched against pending interactions, adding it to pending list to check against future interactions");
+                //If the request has yet to be matched against an interaction, we wait here on a task that only completes if a matching interaction is found against a subsequent request
+                //If a matching interaction doesn't come in within the specified timeout window, an exception is thrown and the test run fails
+                if (matchedInteraction == null)
+                {
+                    requestAndTcs = (request, tcs);
+                    _pendingRequests.Add(requestAndTcs);
+                }
             }
-
-            //If the request has yet to be matched against an interaction, we wait here on a task that only completes if a matching interaction is found against a subsequent request
-            //If a matching interaction doesn't come in within the specified timeout window, an exception is thrown and the test run fails
             if (matchedInteraction == null)
             {
-                var tcs = new TaskCompletionSource<IInteraction>();
-                var requestAndTcs = (request, tcs);
-                _pendingRequests.Add(requestAndTcs);
                 try
                 {
-
                     using (var cts = new CancellationTokenSource(_concurrentRequestWindow))
                     {
-                        cts.Token.Register(() => tcs.TrySetCanceled());
+                        cts.Token.Register(() => tcs.TrySetCanceled()); 
+                        _logger.LogDebug($"Waiting for request '{request.Method} {request.Url}' to be matched");
                         matchedInteraction = await requestAndTcs.tcs.Task;
+                        _logger.LogDebug($"Request '{request.Method} {request.Url}' matched to interaction {matchedInteraction.Number}, resuming serviceing request.");
                     }
                 }
                 catch (TaskCanceledException ex)
@@ -181,7 +186,7 @@ namespace Servirtium.Core.Interactions
             }
 
             var response = builder.Build();
-            _logger.LogDebug($"Replaying {response.StatusCode} response against {request.Method} to {request.Url} for interaction {interactionNumber}.");
+            _logger.LogDebug($"Replaying {response.StatusCode} response against {request.Method} to {request.Url} for interaction {matchedInteraction.Number}.");
             return response;
         }
 
