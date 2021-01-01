@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <PackageId>Servirtium.AspNetCore</PackageId>
-    <VersionPrefix>1.1.0</VersionPrefix>
+    <VersionPrefix>1.2.0</VersionPrefix>
     <VersionSuffix>dev.1</VersionSuffix>
     <PackageProjectUrl>https://github.com/servirtium/demo-dotnet-climate-tck</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
