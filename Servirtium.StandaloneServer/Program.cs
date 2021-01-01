@@ -17,7 +17,7 @@ namespace Servirtium.StandaloneServer
 
         public static void Main(string[] args)
         {
-            var port = args.Length > 2 ? ushort.Parse(args[2]) : (ushort)1234;
+            var port = args.Length > 2 ? ushort.Parse(args[2]) : (ushort)61417;
             var command = args[0].ToLower();
             var sourceUrl = args[1];
             var scriptDirectory = Directory.CreateDirectory(RECORDING_OUTPUT_DIRECTORY);
@@ -29,10 +29,11 @@ namespace Servirtium.StandaloneServer
             });
             var logger = loggerFactory.CreateLogger<Program>();
             IInteractionMonitor monitor;
+            logger.LogInformation($"Initializing Servirtium Standalone Server in '{command}' mode");
             switch (command)
             {
                 case "playback":
-                    { 
+                    {
                         var replayer = new InteractionReplayer(null, null, null, null, loggerFactory); 
                         var scriptFile = scriptDirectory.GetFiles()
                                      .OrderByDescending(f => f.LastWriteTime)
@@ -74,12 +75,16 @@ namespace Servirtium.StandaloneServer
                 loggerFactory
             );
             logger.LogInformation("Starting up Servirtium Standalone Server.");
-            server.Start().Wait();
+
+            //ProcessExit hook must be attached before server.Start() is called.
+            //server.Start() attaches a standard ASP.NET ProcessExit hook and we need this one to run first,
             AppDomain.CurrentDomain.ProcessExit += (a, e) =>
             {
-                logger.LogInformation("Servirtium Standalone Server attempted graceful shutdown.");
+                logger.LogInformation("Servirtium Standalone Server attempting graceful shutdown.");
                 server.Stop().Wait();
             };
+            server.Start().Wait();
+            logger.LogInformation("Servirtium Standalone Server started and listening.");
             while (Console.ReadLine()?.ToLower() != "exit") { }
             logger.LogDebug("Servirtium Standalone Server received 'exit' command, shutting down.");
             server.Stop().Wait();

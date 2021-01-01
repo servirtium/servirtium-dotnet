@@ -37,10 +37,18 @@ namespace Servirtium.Core.Interactions
         private readonly RecordTime _recordTime;
         
         public InteractionRecorder(string targetFile, IScriptWriter scriptWriter, bool bypassProxy = false, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes)
-            : this(null, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(bypassProxy, loggerFactory), null, null, null, null, recordTime) { }
+            : this(null, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(bypassProxy, loggerFactory), null, null, null, null, recordTime)
+        {
+            //Ensure file is blank first
+            using (File.CreateText(targetFile)) ;
+        }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes) 
-            : this(redirectHost, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(false, loggerFactory), null, null, null, null, recordTime) { }
+            : this(redirectHost, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(false, loggerFactory), null, null, null, null, recordTime)
+        {
+            //Ensure file is blank first
+            using (File.CreateText(targetFile)) ;
+        }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes)
             : this(redirectHost, () => File.AppendText(targetFile), scriptWriter, service, interactions, null, null, loggerFactory, recordTime)
