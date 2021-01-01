@@ -1,6 +1,8 @@
 import sys
 import os
 import signal
+from pathlib import Path
+
 import platform
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,7 +13,7 @@ import subprocess
 import time
 import argparse
 
-parser = argparse.ArgumentParser(description='Run Servirtium.NET.')
+parser = argparse.ArgumentParser(description='Run Servirtium Standalone Server and Compatibility Suite')
 parser.add_argument("mode", help="Servirtium's mode of operation, i.e. recording a new script or playing an existing one back", choices = ["record", "playback", "direct"])
 parser.add_argument("-p", "--port", help="The port Servirtium will run on", type=int, default=61417)
 parser.add_argument("-d", "--chromedriver", help="The location of the Selenium Chrome Webdriver executable - omit to use one that's on the system PATH")
@@ -23,14 +25,16 @@ args = parser.parse_args()
 
 browser_url = args.testpage %(args.port)
 
+docker_image_name = Path('.compatibility_suite_docker_image_name.txt').read_text()
+
 docker_container_name = "servirtium-compatibility-test-%s" %(args.mode)
 
 if args.mode == "record" or args.mode == "playback":
     subprocess.call(["docker", "volume", "create", "scripts"])
     subprocess.call(["docker", "rm", docker_container_name, "-f"])
     docker_args = ["docker", "run", "-p", "%s:%s" %(str(args.port), str(args.port)), "--volume", "scripts:/Servirtium/test_recording_output", "--name", docker_container_name, "-d"]
-    # TODO check that .NET process is already started.
-    subprocess.call(docker_args + ["servirtium-dotnet-standalone-server", args.mode, args.backend, str(args.port)])
+    # TODO check that servirtium docker process is already started.
+    subprocess.call(docker_args + [docker_image_name, args.mode, args.backend, str(args.port)])
     print("Docker container: %s" %(docker_container_name))
 
 else:
@@ -64,7 +68,7 @@ print("mode: " + args.mode)
 
 
 if args.mode == "record" or args.mode == "playback":
-    print("Killing Servirtium.NET")
+    print("Killing Servirtium Standalone Server")
     subprocess.call(["docker", "stop", docker_container_name])
 
 print("Closing Selenium")
