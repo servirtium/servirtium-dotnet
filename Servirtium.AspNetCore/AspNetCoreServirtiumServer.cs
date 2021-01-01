@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -73,6 +71,7 @@ namespace Servirtium.AspNetCore
                     var handler = new AspNetCoreServirtiumRequestHandler(servirtiumHandler, loggerFactory);
                     app.Run(async ctx =>
                     {
+                        _logger.LogInformation($"Received request: {ctx.Request.Method} {ctx.Request.Path}.");
                         try
                         {
                             if (HttpMethods.IsOptions(ctx.Request.Method))
@@ -108,14 +107,25 @@ namespace Servirtium.AspNetCore
                         }
                         catch (Exception ex)
                         {
-                            ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                            await ctx.Response.WriteAsync(
-@$"{ex.Message}
-{ex.Source}
-{ex.StackTrace}");
+                            if (ex is InteractionException)
+                            {
+                                ctx.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                            }
+                            else
+                            {
+                                ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                            }
+                            ctx.Response.ContentType = "text/plain";
+                            var errorBody = System.Text.Encoding.UTF8.GetBytes(ex.ToString());
+                            ctx.Response.ContentLength = errorBody.Length;
+                            ctx.Response.Headers.Append("Access-Control-Allow-Origin", new StringValues("*"));
+                            ctx.Response.Body.WriteAsync(errorBody, 0, errorBody.Length).Wait();
 
                         }
-                        await ctx.Response.CompleteAsync();
+                        finally
+                        {
+                            ctx.Response.CompleteAsync().Wait();
+                        }
                     });
                 });
 

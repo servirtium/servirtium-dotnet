@@ -103,6 +103,7 @@ namespace Servirtium.Core.Interactions
             IInteraction? matchedInteraction = null;
             var tcs = new TaskCompletionSource<IInteraction>();
             var requestAndTcs = (request, tcs);
+            var finalError = new StringBuilder();
 
             lock (_pendingInteractions)
             {
@@ -119,7 +120,9 @@ namespace Servirtium.Core.Interactions
                     }
                     else
                     {
-                        _logger.LogWarning($"Pending interaction not matched against request - {validationResult.Message}");
+                        var err = $"Pending interaction not matched against request - {validationResult.Message}";
+                        _logger.LogWarning(err);
+                        finalError.AppendLine(err);
                     }
                 }
 
@@ -142,11 +145,11 @@ namespace Servirtium.Core.Interactions
                         }
                     }
                 }
-                _logger.LogDebug($"Request '{request.Method} {request.Url}' not matched against pending interactions, adding it to pending list to check against future interactions");
                 //If the request has yet to be matched against an interaction, we wait here on a task that only completes if a matching interaction is found against a subsequent request
                 //If a matching interaction doesn't come in within the specified timeout window, an exception is thrown and the test run fails
                 if (matchedInteraction == null)
                 {
+                    _logger.LogDebug($"Request '{request.Method} {request.Url}' not matched against pending interactions, adding it to pending list to check against future interactions");
                     requestAndTcs = (request, tcs);
                     _pendingRequests.Add(requestAndTcs);
                 }
@@ -164,9 +167,9 @@ namespace Servirtium.Core.Interactions
                     }
                 }
                 catch (TaskCanceledException ex)
-                {
+                {                   
                     _logger.LogError($"Interaction was not matched against a request within the {_concurrentRequestWindow.TotalSeconds} second timeout.", ex);
-                    throw;
+                    throw new PlaybackException($"Interaction was not matched against a request within the {_concurrentRequestWindow.TotalSeconds} second timeout.{Environment.NewLine}{finalError}", ex);
                 }
                 _pendingRequests.Remove(requestAndTcs);
             }
