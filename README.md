@@ -92,3 +92,7 @@ The Servirtium implementation guide is complete and all features are implemented
 Current roadmap in priority order:
 
 * Productionise standalone server host executable (currently used to sanity check HTTP requests from tests against those sent from postman) to offer a subset of Servirtium functionality out of process.
+
+## Confirming compatability with other implementations
+
+See https://github.com/servirtium/compatibility-suite-runner
