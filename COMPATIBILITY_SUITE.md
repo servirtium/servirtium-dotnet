@@ -38,3 +38,7 @@ curl -s https://raw.githubusercontent.com/servirtium/compatibility-suite-runner/
 ### Windows
 
 TODO
+
+## Running this without installing .NET core
+
+TODO - Docker way - note that it's slower.
