@@ -1,6 +1,6 @@
 # Servirtium .NET
 
-.NET Core implementation of [Servirtium](https://servirtium.dev), based on the Java implementation: https://github.com/servirtium/servirtium-java. 
+.NET Core implementation of [Servirtium](https://servirtium.dev), based on the Java implementation: https://github.com/servirtium/servirtium-java. Development led by [Stephen Hand](https://twitter.com/HandStephen).
 
 ## Examples of Use
 
