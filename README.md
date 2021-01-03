@@ -1,8 +1,10 @@
 # Servirtium .NET
 
-.NET Core 3.1 implementation of Servirtium, based on the Java implementation: https://github.com/servirtium/servirtium-java
+.NET Core implementation of [Servirtium](https://servirtium.dev), based on the Java implementation: https://github.com/servirtium/servirtium-java. 
 
-## Examples
+## Examples of Use
+
+You're going to use this with a Unit test framework like NUnit. Most likely you're writing will be "service tests" which are part of the class of tests called "integration tests".
 
 ### Recording HTTP interactions to Servirtium Markdown
 
@@ -66,13 +68,13 @@ See full demo project for more complete example code: https://github.com/servirt
 
 ## CLI Commands
 
-### Build Solution
+### Build This Solution
 
-From the solution directory:
+You will need to have the .NET core SDK 3.1 installed. From the solution directory:
 
 `dotnet build`
 
-### Run All Tests
+### Running All Tests
 
 From the solution directory:
 
