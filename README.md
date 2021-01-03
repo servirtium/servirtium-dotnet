@@ -78,7 +78,7 @@ From the solution directory:
 
 `dotnet test`
 
-### Published NuGet assemblies
+## Published NuGet assemblies
 
 * [Servirtium.Core/1.0.0](https://www.nuget.org/packages/Servirtium.Core/1.0.0)
 * [Servirtium.AspNetCore/1.0.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.0.0)
@@ -95,4 +95,4 @@ Current roadmap in priority order:
 
 ## Confirming compatability with other implementations
 
-See https://github.com/servirtium/compatibility-suite-runner
+Read about the [compatibility suite](COMPATIBILITY_SUITE.md) for this .NET implementation
