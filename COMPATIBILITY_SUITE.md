@@ -2,9 +2,9 @@
 
 The compatibility suite allows us to check this .NET version of Servirtium against other language implementations. Regular users of Servirtim are unlikely to deploy Servirtium in this configuration. People contributing to Servirtium development will be interested in this.
 
-## I am a regular .NET developer
-
 You'll need to have Docker, Python3 installed in addition to the .NET core SDK 3.1
+
+## Running this from a cloned/checked out directory
 
 ```
 git clone git@github.com:servirtium/servirtium-dotnet.git
@@ -31,7 +31,8 @@ Note 'record' and 'playback' above.
 As above but thve Python3 line should be
 
 ```
-curl -s https://raw.githubusercontent.com/servirtium/compatibility-suite-runner/main/compatibility-suite.py | python3 /dev/stdin record -p 61417
+curl -s https://raw.githubusercontent.com/servirtium/compatibility-suite-runner/main/compatibility-suite.py \
+  | python3 /dev/stdin record -p 61417
 ```
 
 ### Windows
