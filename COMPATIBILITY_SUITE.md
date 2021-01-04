@@ -22,6 +22,14 @@ python3 path/to/compatibility-suite-runner/compatibility-suite.py playback -p 61
 
 That replays the 16 records interactions with out test suite - you can be offline and this will still work
 
+### Comparing the output to the reference recording
+
+```
+bash path/to/compatibility-suite-runner/compare_recording_with_reference_case.sh .compatibility_suite_recording.md 
+```
+
+This script will tell you whether the recoding you just made is the same as the reference recording.
+
 ## Running this GitHub without cloning
 
 Note 'record' and 'playback' above.
@@ -32,8 +40,11 @@ As above but thve Python3 line should be
 
 ```
 curl -s https://raw.githubusercontent.com/servirtium/compatibility-suite-runner/main/compatibility-suite.py \
-  | python3 /dev/stdin record -p 61417
+  | python3 /dev/stdin record -p 61417  
 ```
+
+Repeat the above with 'playback' instead of the 'record'
+
 
 ### Windows
 
