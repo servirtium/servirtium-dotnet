@@ -45,7 +45,7 @@ namespace Servirtium.StandaloneServer
                 case "record":
                     {
                         monitor = new InteractionRecorder(
-                            Path.Combine(RECORDING_OUTPUT_DIRECTORY, $"recording_{DateTime.UtcNow:yyyy-MM-dd-HHmmss}.md"),
+                            Path.Combine(RECORDING_OUTPUT_DIRECTORY, $"recording.md"),
                             new MarkdownScriptWriter(null, loggerFactory), 
                             false,
                             loggerFactory,
