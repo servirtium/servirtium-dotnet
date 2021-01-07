@@ -64,7 +64,8 @@ namespace Servirtium.StandaloneServer
                     new SimpleHttpMessageTransforms(
                         new Uri(sourceUrl),
                         new Regex[] { },
-                        new[] { new Regex("Date:") },
+                        new[] { new Regex("Date:"), new Regex("Via:"), 
+                            new Regex("^X-"), new Regex("^X-"), new Regex("^Server:") },
                         loggerFactory
                     ),
                     new FindAndReplaceHttpMessageTransforms(
