@@ -7,11 +7,12 @@ You'll need to have Docker, Python3 installed in addition to the .NET core SDK 3
 ## Running this from a cloned/checked out directory
 
 ```
+git clone git@github.com:servirtium/compatibility-suite-runner.git
 git clone git@github.com:servirtium/servirtium-dotnet.git
 cd servirtium-dotnet
 build.bat (or ./build.sh)
 docker-compose build
-python3 path/to/compatibility-suite-runner/compatibility-suite.py record -p 61417
+python3 ../compatibility-suite-runner/compatibility-suite.py record -p 61417
 ```
 
 That records 16 interactions with out test suite - you'll need to be online
@@ -36,7 +37,7 @@ Note 'record' and 'playback' above.
 
 ### Mac & Linux
 
-As above but thve Python3 line should be
+As above but the above Python3 line should be
 
 ```
 curl -s https://raw.githubusercontent.com/servirtium/compatibility-suite-runner/main/compatibility-suite.py \
