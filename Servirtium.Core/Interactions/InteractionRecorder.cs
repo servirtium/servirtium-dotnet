@@ -164,6 +164,14 @@ namespace Servirtium.Core.Interactions
             }
         }
 
+
+        public void StartScript() {
+            using (var fileContents = File.OpenText(""))
+            {
+                //TODO: Implement loading previous script version for comparison
+            }
+        }
+
         public void FinishedScript(int interactionNum, bool failed)
         {
             if (_recordTime == RecordTime.AfterScriptFinishes)
