@@ -15,6 +15,8 @@ namespace Servirtium.Core.Http
         Task<IResponseMessage> ProcessRequest(IRequestMessage request, IEnumerable<IInteraction.Note> notes);
 
         void FinishedScript() { }
+
+        void StartScript() { }
     }
 
     public class StubServirtiumRequestHandler : IServirtiumRequestHandler

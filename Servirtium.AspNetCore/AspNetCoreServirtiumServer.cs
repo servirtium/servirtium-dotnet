@@ -150,6 +150,7 @@ namespace Servirtium.AspNetCore
             _state = State.Running;
             _logger.LogInformation($"Host successfully started.");
 
+            ((IServirtiumServer)this).StartScript();
             return this;
         }
 

@@ -9,6 +9,10 @@ namespace Servirtium.Core.Interactions
 {
     public interface IInteractionMonitor
     {
+        void StartScript() {}
+
+
+        
         void FinishedScript(int interactionNum, bool failed) { }
 
         Task<IResponseMessage> GetServiceResponseForRequest(int interactionNumber, IRequestMessage request,

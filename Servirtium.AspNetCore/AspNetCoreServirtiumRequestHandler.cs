@@ -32,6 +32,21 @@ namespace Servirtium.AspNetCore
             _logger = loggerFactory.CreateLogger<AspNetCoreServirtiumRequestHandler>();
         }
 
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override string? ToString()
+        {
+            return base.ToString();
+        }
+
         internal async Task HandleRequest(
             Uri targetHost, 
             string pathAndQuery, 
@@ -98,6 +113,10 @@ namespace Servirtium.AspNetCore
                 responseContentTypeSetter(clientResponse.Body.Value.Type.MediaType);
                 await responseBodyStream.WriteAsync(clientResponse.Body.Value.Content, 0, clientResponse.Body.Value.Content.Length);
             }
+        }
+
+        public void StartScript() {
+            _internalHandler.StartScript();
         }
     }
 }
