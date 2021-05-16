@@ -42,6 +42,11 @@ namespace Servirtium.Core.Http
             return clientResponse;
         }
 
+        public void StartScript()
+        {
+            _monitor.StartScript();
+        }
+
         public void FinishedScript()
         {
             _monitor.FinishedScript(_counter.Get(), false);
