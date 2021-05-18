@@ -5,13 +5,15 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <PackageId>Servirtium.AspNetCore</PackageId>
-    <VersionPrefix>1.2.0</VersionPrefix>
+    <VersionPrefix>1.2.1</VersionPrefix>
+	<VersionSuffix>dev.1</VersionSuffix>
     <PackageProjectUrl>https://github.com/servirtium/demo-dotnet-climate-tck</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
     <Product>Servirtium</Product>
     <Description>ASP.NET Core Servirtium implementation.</Description>
     <IsPackable>true</IsPackable>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
