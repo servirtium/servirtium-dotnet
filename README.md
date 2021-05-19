@@ -72,13 +72,25 @@ See full demo project for more complete example code: https://github.com/servirt
 
 You will need to have the .NET core SDK 3.1 installed. From the solution directory:
 
-`dotnet build`
+```
+dotnet restore
+dotnet build
+````
 
 ### Running All Tests
 
 From the solution directory:
 
 `dotnet test`
+
+### Publishing to your localhost Nuget
+
+```
+rm -rf /Users/paul/.nuget/servirtium.*
+nuget add Servirtium.Core/bin/Debug/Servirtium.Core.1.2.1-dev.1.nupkg -source ~/.nuget
+nuget add Servirtium.StandaloneServer/bin/Debug/Servirtium.StandaloneServer.1.2.1-dev.1.nupkg -source ~/.nuget
+nuget add Servirtium.AspNetCore/bin/Debug/Servirtium.AspNetCore.1.2.1-dev.1.nupkg -source ~/.nuget
+```
 
 ## Published NuGet assemblies
 
