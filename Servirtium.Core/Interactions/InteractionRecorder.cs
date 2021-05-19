@@ -213,7 +213,7 @@ namespace Servirtium.Core.Interactions
                 {
                     Console.Out.WriteLine(">> 3");
 
-                    throw new RecordException("Recording was different - check 'git diff' or equiv", null);
+                    throw new RecordException("Recording was different - check 'git diff " + _targetFile + "' or equiv.", null);
                 }
             }
         }
