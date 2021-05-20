@@ -86,7 +86,7 @@ From the solution directory:
 ### Publishing to your localhost Nuget
 
 ```
-rm -rf /Users/paul/.nuget/servirtium.*
+rm -rf ~/.nuget/servirtium.*
 nuget add Servirtium.Core/bin/Debug/Servirtium.Core.1.2.1-dev.1.nupkg -source ~/.nuget
 nuget add Servirtium.StandaloneServer/bin/Debug/Servirtium.StandaloneServer.1.2.1-dev.1.nupkg -source ~/.nuget
 nuget add Servirtium.AspNetCore/bin/Debug/Servirtium.AspNetCore.1.2.1-dev.1.nupkg -source ~/.nuget
