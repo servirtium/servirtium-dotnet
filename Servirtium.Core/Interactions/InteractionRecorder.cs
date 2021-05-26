@@ -204,15 +204,13 @@ namespace Servirtium.Core.Interactions
                 _logger.LogInformation($"Finished script, wrote {_allInteractions.Count} interactions.");
             }
 
-            Console.Out.WriteLine(">> 1");
-            if (_targetFile != null)
+            var failIfDiff = Environment.GetEnvironmentVariable("SV_FAIL_IF_DIFFERENT_RECORDING");
+
+            if (_targetFile != null && !(""+failIfDiff).ToLower().Equals("false"))
             {
-                Console.Out.WriteLine(">> 2");
                 string current = GetRecordingFromFile();
                 if (!_previous.Equals("") && !_previous.Equals(current))
                 {
-                    Console.Out.WriteLine(">> 3");
-
                     throw new RecordException("Recording was different - check 'git diff " + _targetFile + "' or equiv.", null);
                 }
             }
