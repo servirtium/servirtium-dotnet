@@ -24,6 +24,11 @@ namespace Servirtium.Core
         void MakeCodeNote(string title, string note);
 
         protected IServirtiumRequestHandler InternalRequestHandler { get; }
+
+        void StartScript() 
+        {
+            InternalRequestHandler.StartScript();
+        }
     }
 
     public class StubServirtiumServer : IServirtiumServer

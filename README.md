@@ -72,13 +72,20 @@ See full demo project for more complete example code: https://github.com/servirt
 
 You will need to have the .NET core SDK 3.1 installed. From the solution directory:
 
-`dotnet build`
+```
+dotnet restore
+dotnet build
+````
 
 ### Running All Tests
 
 From the solution directory:
 
 `dotnet test`
+
+### Publishing to your localhost Nuget
+
+See `deploy_local_nuget.sh `
 
 ## Published NuGet assemblies
 

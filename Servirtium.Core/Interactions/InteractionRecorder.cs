@@ -35,26 +35,49 @@ namespace Servirtium.Core.Interactions
         private readonly IBodyFormatter _responseBodyFormatter;
 
         private readonly RecordTime _recordTime;
-        
+        private string _previous = "";
+        private string _targetFile;
+
         public InteractionRecorder(string targetFile, IScriptWriter scriptWriter, bool bypassProxy = false, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes)
             : this(null, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(bypassProxy, loggerFactory), null, null, null, null, recordTime)
         {
+            _previous = GetRecordingFromFile(targetFile);
             //Ensure file is blank first
-            using (File.CreateText(targetFile)) ;
+            using (File.CreateText(targetFile));
         }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes) 
             : this(redirectHost, () => File.AppendText(targetFile), scriptWriter, new ServiceInteropViaSystemNetHttp(false, loggerFactory), null, null, null, null, recordTime)
         {
+            _previous = GetRecordingFromFile(targetFile);
             //Ensure file is blank first
-            using (File.CreateText(targetFile)) ;
+            using (File.CreateText(targetFile));
         }
 
         public InteractionRecorder(Uri redirectHost, string targetFile, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes)
             : this(redirectHost, () => File.AppendText(targetFile), scriptWriter, service, interactions, null, null, loggerFactory, recordTime)
         {
+            _previous = GetRecordingFromFile(targetFile);
             //Ensure file is blank first
-            using (File.CreateText(targetFile)) ;
+            using (File.CreateText(targetFile));
+        }
+
+        private string GetRecordingFromFile(string targetFile)
+        {
+            _targetFile = targetFile;
+            return GetRecordingFromFile();
+        }
+
+        private string GetRecordingFromFile()
+        {
+            try
+            {
+                return File.ReadAllText(_targetFile);
+            }
+            catch (FileNotFoundException e)
+            {
+                return "";
+            }
         }
 
         public InteractionRecorder(Uri? redirectHost, Func<TextWriter> outputWriterFactory, IScriptWriter scriptWriter, IServiceInteroperation service, IDictionary<int, IInteraction>? interactions = null, IBodyFormatter? responseBodyFormatter = null, IBodyFormatter? requestBodyFormatter = null, ILoggerFactory? loggerFactory = null, RecordTime recordTime = RecordTime.AfterScriptFinishes)
@@ -164,6 +187,14 @@ namespace Servirtium.Core.Interactions
             }
         }
 
+
+        public void StartScript() {
+            using (var fileContents = File.OpenText(""))
+            {
+                //TODO: Implement loading previous script version for comparison
+            }
+        }
+
         public void FinishedScript(int interactionNum, bool failed)
         {
             if (_recordTime == RecordTime.AfterScriptFinishes)
@@ -171,6 +202,17 @@ namespace Servirtium.Core.Interactions
                 _logger.LogDebug($"Finishing script, writing {_allInteractions.Count} interactions.");
                 RecordPendingInteractions();
                 _logger.LogInformation($"Finished script, wrote {_allInteractions.Count} interactions.");
+            }
+
+            var failIfDiff = Environment.GetEnvironmentVariable("SV_FAIL_IF_DIFFERENT_RECORDING");
+
+            if (_targetFile != null && !(""+failIfDiff).ToLower().Equals("false"))
+            {
+                string current = GetRecordingFromFile();
+                if (!_previous.Equals("") && !_previous.Equals(current))
+                {
+                    throw new RecordException("Recording was different - check 'git diff " + _targetFile + "' or equiv.", null);
+                }
             }
         }
     }

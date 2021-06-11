@@ -5,13 +5,15 @@
     <Nullable>enable</Nullable>
 
     <PackageId>Servirtium.Core</PackageId>
-    <VersionPrefix>1.2.0</VersionPrefix>
+    <VersionPrefix>1.2.1</VersionPrefix>
+    <VersionSuffix>dev.1</VersionSuffix>
     <PackageProjectUrl>https://github.com/servirtium/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
     <Product>Servirtium</Product>
     <Description>.NET Core Servirtium core logic implementation. Requires consumers to provide their own IServertium web server implentation or use the Servertium.AspNetCore package</Description>
     <IsPackable>true</IsPackable>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
