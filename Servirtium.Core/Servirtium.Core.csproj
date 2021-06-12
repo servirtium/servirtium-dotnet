@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
 
     <PackageId>Servirtium.Core</PackageId>
-    <VersionPrefix>1.2.1</VersionPrefix>
-    <VersionSuffix>dev.1</VersionSuffix>
+    <VersionPrefix>1.3.0</VersionPrefix>
+    <!--<VersionSuffix>dev.1</VersionSuffix>-->
     <PackageProjectUrl>https://github.com/servirtium/servirtium-dotnet</PackageProjectUrl>
     <Authors>Stephen Hand</Authors>
     <Company />
