@@ -6,7 +6,7 @@ on:
 
 jobs:
   release-serviurtium-core:
-    if: ${{ github.ref.contains("refs/tags/servirtium.core/v") }}
+    if: ${{ contains(github.ref, "refs/tags/servirtium.core/v") }}
     runs-on: ubuntu-latest
 
     steps:
