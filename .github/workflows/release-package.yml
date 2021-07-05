@@ -40,4 +40,5 @@ jobs:
           PROJECT_FILE_PATH: Servirtium.Core/Servirtium.Core.csproj
           VERSION_STATIC: ${{ steps.extract-version.outputs.result }}
           INCLUDE_SYMBOLS: true
+          NUGET_KEY: oy2b5rtpxedtgjhfzb5qxmv737u34pkerpviyrwczbrhgm
 
