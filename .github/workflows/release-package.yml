@@ -1,0 +1,53 @@
+name: Release Package
+
+on:
+  release:
+    types: [published]
+
+env:
+  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+jobs:
+  release-servirtium-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.101
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+
+      - uses: nuget/setup-nuget@v1
+        with:
+          nuget-api-key: ${{ secrets.NuGetAPIKey }}
+          nuget-version: '5.x'
+
+      - name: Extract version from ref
+        uses: actions/github-script@v4
+        id: extract-version
+        with:
+          script: |
+            const matches = /refs\/tags\/(.+)\/v(.+)/.exec(context.ref);
+            core.setOutput('package', matches[1]);
+            core.setOutput('version', matches[2]);
+      - name: Nuget Pack
+        env:
+          VERSION: ${{ steps.extract-version.outputs.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.package }}
+        run: dotnet pack ./${PACKAGE}/${PACKAGE}.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
+
+      - name: Nuget Push
+        env:
+          VERSION: ${{ steps.extract-version.outputs.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.package }}
+        run: dotnet nuget push ${PACKAGE}.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
+
