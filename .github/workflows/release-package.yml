@@ -47,7 +47,9 @@ jobs:
         with:
           script: |
             const matches = /refs\/tags\/(.+)\/v(.+)/.exec(context.ref);
-            return { package: matches[1], version: matches[2] };
+            const packageInfo = { package: matches[1], version: matches[2] };
+            console.log(JSON.stringify(packageInfo));
+            return packageInfo;
       - name: Nuget Pack
         env:
           VERSION: ${{ steps.extract-version.outputs.result.version }}
