@@ -89,8 +89,8 @@ See `deploy_local_nuget.sh `
 
 ## Published NuGet assemblies
 
-* [Servirtium.Core/1.0.0](https://www.nuget.org/packages/Servirtium.Core/1.0.0)
-* [Servirtium.AspNetCore/1.0.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.0.0)
+* [Servirtium.Core/1.3.0](https://www.nuget.org/packages/Servirtium.Core/1.3.0)
+* [Servirtium.AspNetCore/1.3.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.3.0)
 
 ## Current Status
 
@@ -105,3 +105,21 @@ Current roadmap in priority order:
 ## Confirming compatability with other implementations
 
 Read about the [compatibility suite](COMPATIBILITY_SUITE.md) for this .NET implementation
+
+## Releasing New Versions
+
+Releases are pushed using the `release-package.yml` Github action, which is triggered by creating a Github release
+
+To publish a new version of the Servirtium.Core package:
+
+1. Create & Publish a new Github release from the web UI, with the tag Servirtium.Core/v<semver2-version> - the tag can be created in advance or be new as part of the release, but the package will only be pushed when a release is created in either case.
+2. The release-package.yml workflow should pick up this new release and push a nuget package.
+
+To publish a new version of the Servirtium.AspNetCore package:
+
+1. Create & Publish a new Github release from the web UI, with the tag Servirtium.AspNetCore/v<semver2-version> - the tag can be created in advance or be new as part of the release, but the package will only be pushed when a release is created in either case.
+2. The release-package.yml workflow should pick up this new release and push a nuget package.
+
+The release-package.yml workflow is generic, it will publish any package you name prior to the forward slash, provided there is a directory in the root of the source with that name containing a csproj file with the same name.
+
+e.g. You could create a release tagged `Apoplectic.Turkeys/v1.2.3` - if there is a project at `/Apoplectic.Turkeys/Apoplectic.Turkeys.csproj` in the source, it will pack and push package Apoplectic.Turkeys version 1.2.3. Otherwise the workflow will fail and nothing will happen

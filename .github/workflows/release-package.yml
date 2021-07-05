@@ -9,7 +9,6 @@ env:
 
 jobs:
   release-serviurtium-core:
-    if: ${{ contains(github.ref, 'refs/tags/servirtium.core/v') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -27,20 +26,11 @@ jobs:
       - name: Test
         run: dotnet test --no-restore --verbosity normal
 
-#     - name: Determine Version
-#       uses: paulhatch/semantic-version@v4.0.2
-#       id: semantic_version
-#       with:
-#         format: "${major}.${minor}.${patch}-dev.{increment}"
-
       - uses: nuget/setup-nuget@v1
         with:
           nuget-api-key: ${{ secrets.NuGetAPIKey }}
           nuget-version: '5.x'
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+
       - name: Extract version from ref
         uses: actions/github-script@v4
         id: extract-version
