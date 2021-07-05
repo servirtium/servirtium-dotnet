@@ -1,0 +1,43 @@
+name: Release Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release-serviurtium-core:
+    if: github.ref.contains("refs/tags/servirtium.core-v")
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.101
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+#     - name: Determine Version
+#       uses: paulhatch/semantic-version@v4.0.2
+#       id: semantic_version
+#       with:
+#         format: "${major}.${minor}.${patch}-dev.{increment}"
+      - name: Extract version from ref
+        uses: actions/github-script@v4
+        id: extract-version
+        with:
+          script: return /refs\/tags\/servirtium.core-v?<version>(.+)/.exec(github.ref)
+      - name: Release Version
+        uses: rohith/publish-nuget@v2
+        with:
+          TAG_COMMIT: false
+          PROJECT_FILE_PATH: Servirtium.Core/Servirtium.Core.csproj
+          VERSION_STATIC: ${{ steps.extract-version.outputs.result }}
+          INCLUDE_SYMBOLS: true
+
