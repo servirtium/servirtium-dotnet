@@ -6,7 +6,7 @@ on:
 
 jobs:
   release-serviurtium-core:
-    if: github.ref.contains("refs/tags/servirtium.core-v")
+    if: ${{ github.ref.contains("refs/tags/servirtium.core/v") }}
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +32,7 @@ jobs:
         uses: actions/github-script@v4
         id: extract-version
         with:
-          script: return /refs\/tags\/servirtium.core-v?<version>(.+)/.exec(github.ref)
+          script: return /refs\/tags\/servirtium.core\/v?<version>(.+)/.exec(github.ref)
       - name: Release Version
         uses: rohith/publish-nuget@v2
         with:
