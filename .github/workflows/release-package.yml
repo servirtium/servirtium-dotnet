@@ -26,6 +26,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+
 #     - name: Determine Version
 #       uses: paulhatch/semantic-version@v4.0.2
 #       id: semantic_version
@@ -34,7 +35,7 @@ jobs:
 
       - uses: nuget/setup-nuget@v1
         with:
-          nuget-api-key: NUGET_API_KEY
+          nuget-api-key: ${{ secrets.NuGetAPIKey }}
           nuget-version: '5.x'
       - name: Dump GitHub context
         env:
@@ -48,8 +49,8 @@ jobs:
       - name: Nuget Pack
         env:
           VERSION: ${{ steps.extract-version.outputs.result }}
-        run: nuget pack ./Servirtium.Core/Servirtium.Core.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
+        run: dotnet pack ./Servirtium.Core/Servirtium.Core.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
 
       - name: Nuget Push
-        run: nuget push Servirtium.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
+        run: dotnet nuget push Servirtium.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
 
