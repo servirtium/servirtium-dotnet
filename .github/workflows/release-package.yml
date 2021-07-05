@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+env:
+  NUGET_API_KEY:
+
 jobs:
   release-serviurtium-core:
     if: ${{ contains(github.ref, 'refs/tags/servirtium.core/v') }}
@@ -28,7 +31,6 @@ jobs:
 #       id: semantic_version
 #       with:
 #         format: "${major}.${minor}.${patch}-dev.{increment}"
-
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
@@ -38,15 +40,11 @@ jobs:
         id: extract-version
         with:
           script: return /refs\/tags\/servirtium\.core\/v(.+)/.exec(context.ref)[1]
-      - name: Dump steps context
+      - name: Nuget Pack
         env:
-          STEPS_CONTEXT: ${{ toJSON(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Release Version
-        uses: rohith/publish-nuget@v2
-        with:
-          TAG_COMMIT: false
-          PROJECT_FILE_PATH: Servirtium.Core/Servirtium.Core.csproj
-          VERSION_STATIC: ${{ steps.extract-version.outputs.result }}
-          NUGET_KEY: oy2b5rtpxedtgjhfzb5qxmv737u34pkerpviyrwczbrhgm
+          VERSION: ${{ steps.extract-version.outputs.result }}
+        run: dotnet pack ./Servirtium.Core/Servirtium.Core.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
+
+      - name: Nuget Push
+        run: dotnet push Servirtium.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
 
