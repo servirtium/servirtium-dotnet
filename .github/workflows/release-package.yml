@@ -45,10 +45,9 @@ jobs:
         uses: actions/github-script@v4
         id: extract-version
         with:
-          result-encoding: string
           script: |
             const matches = /refs\/tags\/(.+)\/v(.+)/.exec(context.ref);
-            return { package: matches[1], version: matches[2] }
+            return { package: matches[1], version: matches[2] };
       - name: Nuget Pack
         env:
           VERSION: ${{ steps.extract-version.outputs.result.version }}
