@@ -5,10 +5,10 @@ on:
     types: [published]
 
 env:
-  NUGET_API_KEY: oy2b5rtpxedtgjhfzb5qxmv737u34pkerpviyrwczbrhgm
+  NUGET_API_KEY: secrets.NUGET_API_KEY
 
 jobs:
-  release-serviurtium-core:
+  release-servirtium-package:
     runs-on: ubuntu-latest
 
     steps:
