@@ -37,7 +37,7 @@ jobs:
         uses: actions/github-script@v4
         id: extract-version
         with:
-          script: return /refs\/tags\/servirtium.core\/v?<version>(.+)/.exec(github.ref)
+          script: return /refs\/tags\/servirtium.core\/v(.+)/.exec(github.ref)[1]
       - name: Dump steps context
         env:
           STEPS_CONTEXT: ${{ toJSON(steps) }}
