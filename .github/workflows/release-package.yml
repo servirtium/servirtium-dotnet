@@ -39,8 +39,8 @@ jobs:
         with:
           script: |
             console.log(`github.ref: ${github.ref}`);
-            console.log(`github: ${github}`);
-            console.log(`context: ${context}`);
+            console.log(`github: ${JSON.stringify(github)}`);
+            console.log(`context: ${JSON.stringify(context)}`);
             return new RegExp("refs\\/tags\\/servirtium\\.core\\/v(.+)").exec(github.ref)[1];
       - name: Dump steps context
         env:
