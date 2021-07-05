@@ -46,14 +46,18 @@ jobs:
         id: extract-version
         with:
           result-encoding: string
-          script: return /refs\/tags\/servirtium\.core\/v(.+)/.exec(context.ref)[1]
+          script: |
+            const matches = /refs\/tags\/(.+)\/v(.+)/.exec(context.ref);
+            return { package: matches[1], version: matches[2] }
       - name: Nuget Pack
         env:
-          VERSION: ${{ steps.extract-version.outputs.result }}
-        run: dotnet pack ./Servirtium.Core/Servirtium.Core.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
+          VERSION: ${{ steps.extract-version.outputs.result.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.result.package }}
+        run: dotnet pack ./${PACKAGE}/${PACKAGE}.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
 
       - name: Nuget Push
         env:
-          VERSION: ${{ steps.extract-version.outputs.result }}
-        run: dotnet nuget push Servirtium.Core.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
+          VERSION: ${{ steps.extract-version.outputs.result.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.result.package }}
+        run: dotnet nuget push ${PACKAGE}.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
 
