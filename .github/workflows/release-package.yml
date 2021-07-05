@@ -47,18 +47,17 @@ jobs:
         with:
           script: |
             const matches = /refs\/tags\/(.+)\/v(.+)/.exec(context.ref);
-            const packageInfo = { package: matches[1], version: matches[2] };
-            console.log(JSON.stringify(packageInfo));
-            return packageInfo;
+            core.setOutput('package', matches[1]);
+            core.setOutput('version', matches[2]);
       - name: Nuget Pack
         env:
-          VERSION: ${{ steps.extract-version.outputs.result.version }}
-          PACKAGE: ${{ steps.extract-version.outputs.result.package }}
+          VERSION: ${{ steps.extract-version.outputs.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.package }}
         run: dotnet pack ./${PACKAGE}/${PACKAGE}.csproj --configuration Release /p:Version=${VERSION} --no-build --output .
 
       - name: Nuget Push
         env:
-          VERSION: ${{ steps.extract-version.outputs.result.version }}
-          PACKAGE: ${{ steps.extract-version.outputs.result.package }}
+          VERSION: ${{ steps.extract-version.outputs.version }}
+          PACKAGE: ${{ steps.extract-version.outputs.package }}
         run: dotnet nuget push ${PACKAGE}.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API_KEY}
 
