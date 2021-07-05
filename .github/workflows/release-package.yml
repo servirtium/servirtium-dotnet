@@ -34,7 +34,7 @@ jobs:
 
       - uses: nuget/setup-nuget@v1
         with:
-          nuget-api-key: ${{ NUGET_API_KEY }}
+          nuget-api-key: NUGET_API_KEY
           nuget-version: '5.x'
       - name: Dump GitHub context
         env:
