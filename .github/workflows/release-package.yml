@@ -38,7 +38,10 @@ jobs:
         id: extract-version
         with:
           script: |
-            return new RegExp("refs\\/tags\\/servirtium\\.core\\/v(.+)").exec(github.ref)[1]
+            console.log(`github.ref: ${github.ref}`);
+            console.log(`github: ${github}`);
+            console.log(`context: ${context}`);
+            return new RegExp("refs\\/tags\\/servirtium\\.core\\/v(.+)").exec(github.ref)[1];
       - name: Dump steps context
         env:
           STEPS_CONTEXT: ${{ toJSON(steps) }}
