@@ -37,11 +37,7 @@ jobs:
         uses: actions/github-script@v4
         id: extract-version
         with:
-          script: |
-            console.log(`github.ref: ${github.ref}`);
-            console.log(`github: ${JSON.stringify(github)}`);
-            console.log(`context: ${JSON.stringify(context)}`);
-            return new RegExp("refs\\/tags\\/servirtium\\.core\\/v(.+)").exec(github.ref)[1];
+          script: return /refs\/tags\/servirtium\.core\/v(.+)/.exec(context.ref)[1]
       - name: Dump steps context
         env:
           STEPS_CONTEXT: ${{ toJSON(steps) }}
