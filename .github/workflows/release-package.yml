@@ -28,11 +28,20 @@ jobs:
 #       id: semantic_version
 #       with:
 #         format: "${major}.${minor}.${patch}-dev.{increment}"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - name: Extract version from ref
         uses: actions/github-script@v4
         id: extract-version
         with:
           script: return /refs\/tags\/servirtium.core\/v?<version>(.+)/.exec(github.ref)
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJSON(steps) }}
+        run: echo "$STEPS_CONTEXT"
       - name: Release Version
         uses: rohith/publish-nuget@v2
         with:
