@@ -194,7 +194,7 @@ namespace Servirtium.Core.Interactions
         }
 
 
-        public void LoadScriptFile(string filename) 
+        public void LoadScriptFile(string filename)
         {
             using (var fileContents = File.OpenText(filename))
             {
@@ -206,7 +206,15 @@ namespace Servirtium.Core.Interactions
         public void ReadPlaybackConversation(TextReader conversationReader, string filename = "no filename set")
         {
             _logger.LogDebug($"Loading interactions from '{filename}'");
-            _allInteractions = _scriptReader.Read(conversationReader);
+            try
+            {
+                _allInteractions = _scriptReader.Read(conversationReader);
+            }
+            catch (ArgumentException e)
+            {
+                throw new ArgumentException("Markdown file that may be missing: " 
+                                            + Path.GetFullPath(filename), e);
+            }
             _logger.LogInformation($"Loaded {_allInteractions.Count()} interactions from '{filename}'");
         }
     }

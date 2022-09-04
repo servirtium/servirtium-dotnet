@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageId>Servirtium.StandaloneServer</PackageId>
     <VersionPrefix>1.2.1</VersionPrefix>
     <VersionSuffix>dev.1</VersionSuffix>

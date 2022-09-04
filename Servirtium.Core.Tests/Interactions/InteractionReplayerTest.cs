@@ -157,6 +157,13 @@ namespace Servirtium.Core.Tests.Interactions
         }
 
         [Fact]
+        public void Fooooo()
+        {
+            var replayer = new InteractionReplayer(null, null, null, null, null);
+            replayer.ReadPlaybackConversation(new StringReader("some script content"), "../../DoesNotExist.md");
+        }
+
+        [Fact]
         public void GetServiceResponseForRequest_MethodMismatchWithRecordedInteraction_Throws()
         {
             var replayer = GenerateReplayer();
