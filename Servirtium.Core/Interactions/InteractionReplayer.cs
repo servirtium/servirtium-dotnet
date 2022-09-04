@@ -212,8 +212,12 @@ namespace Servirtium.Core.Interactions
             }
             catch (ArgumentException e)
             {
-                throw new ArgumentException("Markdown file that may be missing: " 
-                                            + Path.GetFullPath(filename), e);
+                if (filename.Equals("no filename set"))
+                {
+                    throw e;
+                }
+                var fullPath = Path.GetFullPath(filename);
+                throw new ArgumentException("Markdown file that may be missing: " + fullPath, e);
             }
             _logger.LogInformation($"Loaded {_allInteractions.Count()} interactions from '{filename}'");
         }

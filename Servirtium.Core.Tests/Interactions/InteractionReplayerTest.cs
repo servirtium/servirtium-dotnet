@@ -157,10 +157,32 @@ namespace Servirtium.Core.Tests.Interactions
         }
 
         [Fact]
-        public void Fooooo()
+        public void CheckThatBogusFileNameIsMadeAbsoluteToAidUserDebugging()
         {
             var replayer = new InteractionReplayer(null, null, null, null, null);
-            replayer.ReadPlaybackConversation(new StringReader("some script content"), "../../DoesNotExist.md");
+            try
+            {
+                replayer.ReadPlaybackConversation(new StringReader("some script content"), "../../DoesNotExist.md");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.Matches("Markdown file that may be missing: .*Servirtium.Core.Tests/bin/DoesNotExist.md", 
+                    e.Message.Replace("\\","/"));
+            }
+        }
+
+        [Fact]
+        public void CheckThatBogusFileNameIsNotMentionedWhenItIsMissing()
+        {
+            var replayer = new InteractionReplayer(null, null, null, null, null);
+            try
+            {
+                replayer.ReadPlaybackConversation(new StringReader("some script content"),"no filename set");
+            }
+            catch (ArgumentException e)
+            {
+                Assert.StartsWith("No '## Interaction' found in conversation 'some script content '", e.Message);
+            }
         }
 
         [Fact]
