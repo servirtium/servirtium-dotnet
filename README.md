@@ -64,13 +64,13 @@ You're going to use this with a Unit test framework like NUnit. Most likely you'
             server.stop();
 ```
 
-See full demo project for more complete example code: https://github.com/servirtium/demo-dotnet-climate-tck
+See full demo project for more complete example code: [servirtium/demo-dotnet-climate-tck](https://github.com/servirtium/demo-dotnet-climate-tck)
 
 ## CLI Commands
 
 ### Build This Solution
 
-You will need to have the .NET core SDK 3.1 installed. From the solution directory:
+You will need to have the .NET core SDK 6 installed. From the solution directory:
 
 ```
 dotnet restore
@@ -89,12 +89,12 @@ See `deploy_local_nuget.sh `
 
 ## Published NuGet assemblies
 
-* [Servirtium.Core/1.3.0](https://www.nuget.org/packages/Servirtium.Core/1.3.0)
-* [Servirtium.AspNetCore/1.3.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.3.0)
+* [Servirtium.Core/1.4.0](https://www.nuget.org/packages/Servirtium.Core/1.4.0)
+* [Servirtium.AspNetCore/1.4.0](https://www.nuget.org/packages/Servirtium.AspNetCore/1.4.0)
 
 ## Current Status
 
-The Servirtium implementation guide is complete and all features are implemented: [starting-a-new-implementation.md](https://github.com/servirtium/README/blob/master/starting-a-new-implementation.md)
+The Servirtium implementation guide is complete and all features are implemented: [servirtium.dev/new](https://servirtium.dev/new)
 
 ## Roadmap
 
@@ -103,6 +103,8 @@ Current roadmap in priority order:
 * Productionise standalone server host executable (currently used to sanity check HTTP requests from tests against those sent from postman) to offer a subset of Servirtium functionality out of process.
 
 ## Confirming compatability with other implementations
+
+TODO - ph
 
 Read about the [compatibility suite](COMPATIBILITY_SUITE.md) for this .NET implementation
 
@@ -117,9 +119,9 @@ To publish a new version of the Servirtium.Core package:
 
 To publish a new version of the Servirtium.AspNetCore package:
 
-1. Create & Publish a new Github release from the web UI, with the tag Servirtium.AspNetCore/v<semver2-version> - the tag can be created in advance or be new as part of the release, but the package will only be pushed when a release is created in either case.
+1. Create & Publish a new Github release from the web UI, with the tag `Servirtium.AspNetCore/v<semver2-version>`- the tag can be created in advance or be new as part of the release, but the package will only be pushed when a release is created in either case.
 2. The release-package.yml workflow should pick up this new release and push a nuget package.
 
 The release-package.yml workflow is generic, it will publish any package you name prior to the forward slash, provided there is a directory in the root of the source with that name containing a csproj file with the same name.
 
-e.g. You could create a release tagged `Apoplectic.Turkeys/v1.2.3` - if there is a project at `/Apoplectic.Turkeys/Apoplectic.Turkeys.csproj` in the source, it will pack and push package Apoplectic.Turkeys version 1.2.3. Otherwise the workflow will fail and nothing will happen
+e.g. You could create a release tagged `Apoplectic.Turkeys/v1.2.3` - if there is a .NET project at `/Apoplectic.Turkeys/Apoplectic.Turkeys.csproj` in the source, it will pack and push package Apoplectic.Turkeys version 1.2.3. Otherwise the workflow will fail and nothing will happen. See the `.github/` folder.
