@@ -74,35 +74,21 @@ namespace Servirtium.AspNetCore
                         _logger.LogInformation($"Received request: {ctx.Request.Method} {ctx.Request.Path}.");
                         try
                         {
-                            if (HttpMethods.IsOptions(ctx.Request.Method))
+                            var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
+                            var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
+
+                            ctx.Response.OnCompleted(() =>
                             {
-                                //Kill CORS in the face, bypass any Servirtium logic.
-                                ctx.Response.Headers.Append("Access-Control-Allow-Origin", new StringValues("*"));
-                                ctx.Response.Headers.Append("Access-Control-Allow-Methods", new StringValues("*"));
-                                ctx.Response.Headers.Append("Access-Control-Allow-Headers", new StringValues("*"));
-                                ctx.Response.Headers.Append("Access-Control-Allow-Credentials", new StringValues(new string[] { "true", ctx.Request.Host.Value }));
-                                ctx.Response.Headers.Append("Access-Control-Max-Age", new StringValues("864000"));
-
-                            }
-                            else
+                                _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
+                                return Task.CompletedTask;
+                            });
+                            List<IInteraction.Note> notes;
+                            lock (_notesForNextInteraction)
                             {
-                                var targetHost = new Uri($"{ctx.Request.Scheme}{Uri.SchemeDelimiter}{ctx.Request.Host}");
-                                var pathAndQuery = $"{ctx.Request.Path}{ctx.Request.QueryString}";
-
-                                ctx.Response.OnCompleted(() =>
-                                {
-                                    _logger.LogInformation($"{ctx.Request.Method} request to {targetHost}{pathAndQuery} returned to client with code {ctx.Response.StatusCode}");
-                                    return Task.CompletedTask;
-                                });
-                                List<IInteraction.Note> notes;
-                                lock (_notesForNextInteraction)
-                                {
-                                    notes = new List<IInteraction.Note>(_notesForNextInteraction);
-                                    _notesForNextInteraction.Clear();
-                                }
-                                await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
-
+                                notes = new List<IInteraction.Note>(_notesForNextInteraction);
+                                _notesForNextInteraction.Clear();
                             }
+                            await handler.HandleRequest(targetHost, pathAndQuery, ctx.Request.Method, ctx.Request.Headers, ctx.Request.ContentType, ctx.Request.Body, (code) => ctx.Response.StatusCode = (int)code, ctx.Response.Headers, ctx.Response.Body, (ct)=> ctx.Response.ContentType=ct, notes);
 
                         }
                         catch (Exception ex)

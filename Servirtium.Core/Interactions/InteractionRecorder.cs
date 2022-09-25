@@ -189,6 +189,7 @@ namespace Servirtium.Core.Interactions
 
 
         public void StartScript() {
+//            using (var fileContents = File.OpenText(this._targetFile))
             using (var fileContents = File.OpenText(""))
             {
                 //TODO: Implement loading previous script version for comparison
