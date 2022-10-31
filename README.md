@@ -83,9 +83,13 @@ From the solution directory:
 
 `dotnet test`
 
-### Publishing to your localhost Nuget
+### Publishing to your localhost Nuget for development purposes
 
-See `deploy_local_nuget.sh `
+```
+rm -rf ~/.nuget/packages/servirtium*
+rm -rf ~/.nuget/packages/Servirtium*
+dotnet pack -p:PackageVersion=1.5.0-dev --output ~/.nuget/packages/
+```
 
 ## Published NuGet assemblies
 
@@ -100,7 +104,7 @@ The Servirtium implementation guide is complete and all features are implemented
 
 Current roadmap in priority order:
 
-* Productionise standalone server host executable (currently used to sanity check HTTP requests from tests against those sent from postman) to offer a subset of Servirtium functionality out of process.
+* Productionize standalone server host executable (currently used to sanity check HTTP requests from tests against those sent from postman) to offer a subset of Servirtium functionality out of process.
 
 ## Confirming compatability with other implementations
 
