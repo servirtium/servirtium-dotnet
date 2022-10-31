@@ -212,7 +212,7 @@ namespace Servirtium.Core.Interactions
                 string current = GetRecordingFromFile();
                 if (!_previous.Equals("") && !_previous.Equals(current))
                 {
-                    throw new RecordException("Recording was different - check 'git diff " + _targetFile + "' or equiv.", null);
+                    throw new RecordException("Recording was different - check 'git diff " + new Uri(_targetFile).LocalPath + "' or equiv.", null);
                 }
             }
         }
